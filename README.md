@@ -13,6 +13,7 @@ pip install
 
 ## BiLSTM (Hie et al)
 
+Note that while the script has "ESM2" in the title, the `model_name` parameter defines which model will be used. 
 ```
 # run on the coronavirus spike single mutants
 screen -d -m -L -Logfile cov_starr_screen.log python language_models/bin/cov_fasta_ESM2.py \
@@ -76,8 +77,10 @@ screen -d -m -L -Logfile hiv_ESM2.log python bin/cov_fasta_ESM2.py \
 ### Masked grammaticality
 We wrote a script to extract the grammaticality scores for each mutated sequence titled `masked_ESM2.py` and the script can be run in the environment using the command:
 ```
-
+python language_models/ESM_probability_calcs.py <reference.fasta>
 ```
+This script can be used on any protein reference sequence to compute the masked probabilities at every site along the sequence.
+
 # Running the structural models
 
 ## MutComputeX
