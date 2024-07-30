@@ -20,7 +20,7 @@ screen -d -m -L -Logfile cov_starr_screen.log python language_models/bin/cov_fas
      data/cov/cov2_spike_wt.fasta \
      data/cov/starr_library.fasta \
      --model_name bilstm \
-     --checkpoint models/cov.hdf5 \
+     --checkpoint language_models/models/cov.hdf5 \
      --dim 640 | tail -n+31 & \
      > cov_starr_fasta.log &
 
@@ -29,10 +29,12 @@ screen -d -m -L -Logfile cov_omicron_muts_screen.log python language_models/bin/
      data/cov/cov2_spike_wt.fasta \
      data/cov/wuhan_mutants.fasta \
      --model_name bilstm \
-     --checkpoint models/cov.hdf5 \
+     --checkpoint language_models/models/cov.hdf5 \
      --dim 640 | tail -n+31 & \
      > cov_omicron_muts.log &
 ```
+
+
 
 ## ESM2 (Lin et al)
 
@@ -42,7 +44,7 @@ screen -d -m -L -Logfile cov_Starr_ESM2.log python bin/cov_fasta_ESM2.py \
      data/cov/cov2_spike_wt.fasta \
      data/cov/starr_library.fasta \
      --model_name esm2_t30_150M_UR50D \
-     --checkpoint models/cov.hdf5 \
+     --checkpoint language_models/models/cov.hdf5 \
      --dim 640 --max_len 1274 | tail -n+31 & \
      > cov_Starr_ESM2_screen.log &
 
@@ -51,7 +53,7 @@ screen -d -m -L -Logfile cov_omicron_muts_ESM2.log python bin/cov_fasta_ESM2.py 
      data/cov/cov2_spike_wt.fasta \
      data/cov/wuhan_mutants.fasta \
      --model_name esm2_t30_150M_UR50D \
-     --checkpoint models/cov.hdf5 \
+     --checkpoint language_models/models/cov.hdf5 \
      --dim 640 --max_len 1274 | tail -n+31 & \
      > cov_omicron_muts_ESM2_screen.log &
 
@@ -60,7 +62,7 @@ screen -d -m -L -Logfile flu_ESM2.log python bin/cov_fasta_ESM2.py \
      data/flu/WSN1993_H1_HA.fa \
      data/flu/flu_H1_mutant_library.fasta \
      --model_name esm2_t30_150M_UR50D \
-     --checkpoint models/flu.hdf5 \
+     --checkpoint language_models/models/flu.hdf5 \
      --dim 640 --max_len 1274 | tail -n+31 & \
      > flu_ESM2_screen.log &
 
@@ -69,7 +71,7 @@ screen -d -m -L -Logfile hiv_ESM2.log python bin/cov_fasta_ESM2.py \
      data/hiv/hiv_env_translated.fasta \
      data/hiv/hiv_BG505_mutant_library.fasta \
      --model_name esm2_t30_150M_UR50D \
-     --checkpoint models/hiv.hdf5 \
+     --checkpoint language_models/models/hiv.hdf5 \
      --dim 640 --max_len 1274 | tail -n+31 & \
      > hiv_ESM2_screen.log &
 ```
@@ -79,7 +81,7 @@ We wrote a script to extract the grammaticality scores for each mutated sequence
 ```
 python language_models/ESM_probability_calcs.py <reference.fasta>
 ```
-This script can be used on any protein reference sequence to compute the masked probabilities at every site along the sequence.
+This script can be used on any protein reference sequence to compute the masked probabilities at every site along the sequence. The reference sequences used in this study are available at [data/cov/cov2_spike_wt.fasta](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/cov/cov2_spike_wt.fasta), [data/flu/WSN1933_H1_HA.fa](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/flu/WSN1933_H1_HA.fa), [data/hiv/BG505_env_translated.fasta].(https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/hiv/BG505_env_translated.fasta)
 
 # Running the structural models
 
