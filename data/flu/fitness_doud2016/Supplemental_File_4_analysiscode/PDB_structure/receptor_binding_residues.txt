@@ -1,0 +1,30 @@
+# This file defines the receptor binding residues.
+#
+# It starts with the residues defined in Table 1 of Martin et al,
+# Virology, 241:101-111 (1998). This table lists residues that contact
+# receptor. However, not all of these residues are conserved. So an
+# analysis is done to determine which if these residues are over 90%
+# conserved in H1 HAs present in the Influenza Virus Resource as of
+# April-9-2014.
+# Residues that are not conserved at this level but are specified by
+# Martin et al are commented out in the list below.
+# 
+# The columns are as follows:
+# SEQUENTIAL_NUMBER : number in sequential 1, 2, ... numbering of the WSN 
+#    HA.
+# H3_NUMBER : number in H3 numbering scheme used by Martin et al.
+# WSN_IDENTITY : identity in WSN HA.
+# CONSENSUS_H1 : most common identity in H1 HAs.
+# CONSERVATION : conservation in all H1 HAs of the consensus residue
+#
+# SEQUENTIAL_NUMBER H3_NUMBER WSN_IDENTITY CONSENSUS_H1 CONSERVATION
+108 98 Y Y 0.9995
+#149 136 T T 0.7628
+166 153 W W 0.9996
+196 183 H H 0.9992
+203 190 E D 0.9033
+207 194 L L 0.9712
+208 195 Y  Y 0.9995
+#238 225 D D 0.8511
+239 226 Q Q 0.9912
+241 228 G G 0.9988

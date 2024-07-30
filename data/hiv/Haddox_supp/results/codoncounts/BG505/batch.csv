@@ -1,0 +1,13 @@
+name,R1
+DNA-1,BG505-DNA-1_R1.fastq.gz
+DNA-2,BG505-DNA-2_R1.fastq.gz
+DNA-3,BG505-DNA-3_R1.fastq.gz
+mutDNA-1,BG505-mutDNA-1_R1.fastq.gz
+mutDNA-2,BG505-mutDNA-2_R1.fastq.gz
+mutDNA-3,BG505-mutDNA-3_R1.fastq.gz
+virus-1,BG505-virus-1_R1.fastq.gz
+virus-2,BG505-virus-2_R1.fastq.gz
+virus-3,BG505-virus-3_R1.fastq.gz
+mutvirus-1,BG505-mutvirus-1_R1.fastq.gz
+mutvirus-2,BG505-mutvirus-2_R1.fastq.gz
+mutvirus-3,BG505-mutvirus-3_R1.fastq.gz

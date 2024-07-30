@@ -1,0 +1,93 @@
+2018-02-16 14:37:43,347 - INFO - Beginning execution of phydms in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-16 14:37:43,348 - INFO - Progress is being logged to ./results/phydms_analysis//averaged_ExpCM_BG505_log.log
+
+2018-02-16 14:37:43,348 - INFO - Version information:
+	Time and date: Fri Feb 16 14:37:42 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	phydms version: 2.2.1
+	Bio version: 1.70
+	cython version: 0.26
+	numpy version: 1.14.0
+	scipy version: 1.0.0
+	matplotlib version: 2.1.2
+	natsort version: 5.1.0
+	sympy version: 1.1.1
+	six version: 1.11.0
+	pandas version: 0.22.0
+	pyvolve version: 0.8.4
+	statsmodels version: 0.8.0
+	weblogolib version: 3.5.0
+	PyPDF2 version: 1.26.0
+
+2018-02-16 14:37:43,348 - INFO - Parsed the following arguments:
+	omegabysite = True
+	fitprefsmethod = 2
+	diffprefsbysite = False
+	randprefs = False
+	alignment = ./results/alignments/masked_alignment.fasta
+	opt_details = False
+	ncats = 4
+	avgprefs = True
+	gammabeta = False
+	model = ('ExpCM', './results/phydms_analysis/BG505.csv')
+	omegabysite_fixsyn = False
+	seed = 1
+	diffprefsprior = ('invquadratic', 150.0, 0.5)
+	ncpus = 1
+	fitphi = False
+	minpref = 0.002
+	brlen = optimize
+	nograd = False
+	minbrlen = 1e-06
+	profile = False
+	divpressure = None
+	gammaomega = False
+	initparams = None
+	tree = ./results/phydms_analysis//RAxML_tree.newick
+	outprefix = ./results/phydms_analysis//averaged_ExpCM_BG505
+
+2018-02-16 14:37:43,348 - INFO - Random number seed: 1
+
+2018-02-16 14:37:43,348 - INFO - Reading alignment from ./results/alignments/masked_alignment.fasta
+2018-02-16 14:37:43,686 - INFO - Read 69 aligned sequences from ./results/alignments/masked_alignment.fasta, each consisting of 616 codons.
+
+2018-02-16 14:37:43,686 - INFO - The model will be an ExpCM informed by site-specific amino-acid preferences in ./results/phydms_analysis/BG505.csv
+2018-02-16 14:37:43,686 - INFO - Preferences will be averaged across sites.
+2018-02-16 14:37:44,659 - INFO - Successfully read site-specific amino-acid preferences for all 616 sites.
+
+2018-02-16 14:37:44,661 - INFO - Nucleotide frequency parameters phi will be set so stationary state matches alignment nucleotide frequencies of A = 0.359, C = 0.173, G = 0.224, T = 0.245
+
+2018-02-16 14:37:47,100 - INFO - Reading tree from ./results/phydms_analysis//RAxML_tree.newick
+2018-02-16 14:37:47,104 - INFO - Tree has 69 tips.
+2018-02-16 14:37:47,135 - INFO - Adjusted 1 branch lengths up to minbrlen 1e-06
+
+2018-02-16 14:37:47,136 - INFO - Initializing TreeLikelihood..
+2018-02-16 14:38:42,794 - INFO - TreeLikelihood initialized.
+2018-02-16 14:38:42,795 - INFO - Maximizing log likelihood (initially -42330.55).
+2018-02-16 14:38:42,795 - INFO - Branch lengths will be optimized individually.
+2018-02-16 15:05:24,835 - INFO - Maximization complete:
+	Step 1: optimized parameters, loglik went from -42330.55 to -41162.14 (11 iterations, 19 function evals)
+	Step 2: optimized branches, loglik went from -41162.14 to -41100.25 (22 iterations, 29 function evals)
+	Step 3: optimized parameters, loglik went from -41100.25 to -41100.25 (1 iterations, 4 function evals)
+2018-02-16 15:05:24,843 - INFO - Optimized log likelihood is -41100.25.
+2018-02-16 15:05:24,843 - INFO - Writing log likelihood to ./results/phydms_analysis//averaged_ExpCM_BG505_loglikelihood.txt
+2018-02-16 15:05:24,848 - INFO - Model parameters after optimization:
+	beta = 1.70298
+	kappa = 3.13354
+	omega = 0.605487
+	phiA = 0.398142
+	phiC = 0.156991
+	phiG = 0.230584
+2018-02-16 15:05:24,848 - INFO - Writing model parameters to ./results/phydms_analysis//averaged_ExpCM_BG505_modelparams.txt
+2018-02-16 15:05:24,851 - INFO - Writing the optimized tree to ./results/phydms_analysis//averaged_ExpCM_BG505_tree.newick
+
+2018-02-16 15:05:24,856 - INFO - 
+Fitting a different omega to each site to detect diversifying selection.
+2018-02-16 15:05:24,856 - INFO - Will fit different synonymous rate for each site.
+2018-02-16 15:05:24,856 - INFO - Fitting with 1 CPUs...
+2018-02-16 15:36:49,214 - INFO - Completed fitting the site-specific omega values.
+2018-02-16 15:36:49,215 - INFO - Writing results to ./results/phydms_analysis//averaged_ExpCM_BG505_omegabysite.txt
+
+2018-02-16 15:36:49,221 - INFO - Successful completion of phydms

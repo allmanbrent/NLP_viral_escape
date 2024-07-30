@@ -1,0 +1,153 @@
+2018-02-15 17:10:35,630 - INFO - Beginning execution of dms2_bcsubamp in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-15 17:10:35,630 - INFO - Progress is being logged to ./results/codoncounts/BF520/DNA.log
+2018-02-15 17:10:37,483 - INFO - Version information:
+	Time and date: Thu Feb 15 17:10:35 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	dms_tools2 version: 2.2.dev4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version unknown
+	matplotlib version: 2.1.2
+	plotnine version: 0.3.0
+	natsort version: 5.1.0
+	pystanscipy cannot be imported
+	seaborn version: 0.8.0
+	phydmslib version: 2.2.1
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.1
+
+2018-02-15 17:10:37,483 - INFO - Parsed the following arguments:
+	minfraccall = 0.95
+	refseq = ./data/BF520_env.fasta
+	chartype = codon
+	R1 = ['BF520-DNA_R1.fastq.gz']
+	R2trim = [212]
+	bcinfo = False
+	R2 = None
+	bclen2 = None
+	minq = 15
+	use_existing = yes
+	minreads = 2
+	outdir = ./results/codoncounts/BF520
+	minconcur = 0.75
+	fastqdir = ./results/FASTQ_files/
+	sitemask = ./results/codoncounts/BF520/sitemask.csv
+	ncpus = -1
+	purgebc = 0
+	purgeread = 0
+	maxmuts = 4
+	name = DNA
+	alignspecs = ['88,417,40,39', '418,753,39,35', '754,1092,36,39', '1093,1447,35,29', '1407,1758,35,32', '1759,2097,30,36']
+	R1trim = [205]
+	bclen = 8
+
+2018-02-15 17:10:37,555 - INFO - Read refseq of 2559 codons from ./data/BF520_env.fasta
+2018-02-15 17:10:37,558 - INFO - Reads are in these FASTQ pairs:
+	./results/FASTQ_files/BF520-DNA_R1.fastq.gz and ./results/FASTQ_files/BF520-DNA_R2.fastq.gz
+
+2018-02-15 17:10:37,559 - INFO - Now parsing read pairs...
+2018-02-15 17:10:48,980 - INFO - Reads parsed so far: 500000
+2018-02-15 17:11:00,457 - INFO - Reads parsed so far: 1000000
+2018-02-15 17:11:11,186 - INFO - Reads parsed so far: 1500000
+2018-02-15 17:11:22,056 - INFO - Reads parsed so far: 2000000
+2018-02-15 17:11:33,634 - INFO - Reads parsed so far: 2500000
+2018-02-15 17:11:45,948 - INFO - Reads parsed so far: 3000000
+2018-02-15 17:11:55,146 - INFO - Reads parsed so far: 3500000
+2018-02-15 17:12:07,933 - INFO - Reads parsed so far: 4000000
+2018-02-15 17:12:17,875 - INFO - Reads parsed so far: 4500000
+2018-02-15 17:12:32,766 - INFO - Reads parsed so far: 5000000
+2018-02-15 17:12:42,366 - INFO - Reads parsed so far: 5500000
+2018-02-15 17:12:51,990 - INFO - Reads parsed so far: 6000000
+2018-02-15 17:13:01,793 - INFO - Reads parsed so far: 6500000
+2018-02-15 17:13:20,446 - INFO - Reads parsed so far: 7000000
+2018-02-15 17:13:30,373 - INFO - Reads parsed so far: 7500000
+2018-02-15 17:13:40,574 - INFO - Reads parsed so far: 8000000
+2018-02-15 17:13:50,871 - INFO - Reads parsed so far: 8500000
+2018-02-15 17:14:00,730 - INFO - Reads parsed so far: 9000000
+2018-02-15 17:14:10,857 - INFO - Reads parsed so far: 9500000
+2018-02-15 17:14:37,647 - INFO - Reads parsed so far: 10000000
+2018-02-15 17:14:48,340 - INFO - Reads parsed so far: 10500000
+2018-02-15 17:14:58,352 - INFO - Reads parsed so far: 11000000
+2018-02-15 17:15:07,829 - INFO - Reads parsed so far: 11500000
+2018-02-15 17:15:17,319 - INFO - Reads parsed so far: 12000000
+2018-02-15 17:15:26,912 - INFO - Reads parsed so far: 12500000
+2018-02-15 17:15:27,923 - INFO - Parsed 12553501 reads, found 6030494 unique barcodes.
+2018-02-15 17:15:27,928 - INFO - Summary stats on reads:
+fail filter  low Q barcode     total
+          0        1003272  12553501
+2018-02-15 17:15:27,929 - INFO - Writing these stats to ./results/codoncounts/BF520/DNA_readstats.csv
+
+2018-02-15 17:15:35,167 - INFO - Number of reads per barcode:
+                 number of barcodes
+number of reads                    
+1                           3374438
+2                           1188447
+3                            733973
+4                            388060
+5                            184379
+6                             83930
+7                             38461
+8                             18953
+9                              9636
+10                             5162
+11                             2632
+12                             1300
+13                              628
+14                              282
+15                              104
+16                               60
+17                               31
+18                                6
+19                                4
+20                                3
+21                                3
+22                                1
+28                                1
+2018-02-15 17:15:35,168 - INFO - Writing these stats to ./results/codoncounts/BF520/DNA_readsperbc.csv
+
+2018-02-15 17:15:35,173 - INFO - Examining the 6030494 barcodes to build and align subamplicons...
+2018-02-15 17:15:42,363 - INFO - Barcodes examined so far: 200000
+2018-02-15 17:15:49,067 - INFO - Barcodes examined so far: 400000
+2018-02-15 17:15:55,683 - INFO - Barcodes examined so far: 600000
+2018-02-15 17:16:02,395 - INFO - Barcodes examined so far: 800000
+2018-02-15 17:16:09,133 - INFO - Barcodes examined so far: 1000000
+2018-02-15 17:16:15,503 - INFO - Barcodes examined so far: 1200000
+2018-02-15 17:16:21,904 - INFO - Barcodes examined so far: 1400000
+2018-02-15 17:16:28,112 - INFO - Barcodes examined so far: 1600000
+2018-02-15 17:16:34,310 - INFO - Barcodes examined so far: 1800000
+2018-02-15 17:16:40,541 - INFO - Barcodes examined so far: 2000000
+2018-02-15 17:16:46,630 - INFO - Barcodes examined so far: 2200000
+2018-02-15 17:16:52,699 - INFO - Barcodes examined so far: 2400000
+2018-02-15 17:16:58,668 - INFO - Barcodes examined so far: 2600000
+2018-02-15 17:17:04,562 - INFO - Barcodes examined so far: 2800000
+2018-02-15 17:17:10,478 - INFO - Barcodes examined so far: 3000000
+2018-02-15 17:17:16,862 - INFO - Barcodes examined so far: 3200000
+2018-02-15 17:17:23,211 - INFO - Barcodes examined so far: 3400000
+2018-02-15 17:17:29,546 - INFO - Barcodes examined so far: 3600000
+2018-02-15 17:17:36,007 - INFO - Barcodes examined so far: 3800000
+2018-02-15 17:17:42,498 - INFO - Barcodes examined so far: 4000000
+2018-02-15 17:17:48,788 - INFO - Barcodes examined so far: 4200000
+2018-02-15 17:17:54,958 - INFO - Barcodes examined so far: 4400000
+2018-02-15 17:18:00,973 - INFO - Barcodes examined so far: 4600000
+2018-02-15 17:18:06,878 - INFO - Barcodes examined so far: 4800000
+2018-02-15 17:18:12,876 - INFO - Barcodes examined so far: 5000000
+2018-02-15 17:18:18,849 - INFO - Barcodes examined so far: 5200000
+2018-02-15 17:18:24,758 - INFO - Barcodes examined so far: 5400000
+2018-02-15 17:18:30,663 - INFO - Barcodes examined so far: 5600000
+2018-02-15 17:18:36,522 - INFO - Barcodes examined so far: 5800000
+2018-02-15 17:18:42,392 - INFO - Barcodes examined so far: 6000000
+2018-02-15 17:18:43,293 - INFO - Examined all barcodes. Summary stats:
+aligned  not alignable  too few reads    total
+1951841         704215        3374438  6030494
+2018-02-15 17:18:43,294 - INFO - Writing these stats to ./results/codoncounts/BF520/DNA_bcstats.csv
+
+2018-02-15 17:18:43,328 - INFO - Filtering to only sites listed in sitemask ./results/codoncounts/BF520/sitemask.csv
+2018-02-15 17:18:43,350 - INFO - Filtered from 853 to 662 sites.
+2018-02-15 17:18:43,350 - INFO - Writing the counts of each codon identity at each site to ./results/codoncounts/BF520/DNA_codoncounts.csv
+
+2018-02-15 17:18:43,397 - INFO - Successful completion of dms2_bcsubamp

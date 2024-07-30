@@ -1,0 +1,161 @@
+2018-02-15 17:10:35,587 - INFO - Beginning execution of dms2_bcsubamp in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-15 17:10:35,588 - INFO - Progress is being logged to ./results/codoncounts/BF520/mutDNA-2.log
+2018-02-15 17:10:37,450 - INFO - Version information:
+	Time and date: Thu Feb 15 17:10:35 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	dms_tools2 version: 2.2.dev4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version unknown
+	matplotlib version: 2.1.2
+	plotnine version: 0.3.0
+	natsort version: 5.1.0
+	pystanscipy cannot be imported
+	seaborn version: 0.8.0
+	phydmslib version: 2.2.1
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.1
+
+2018-02-15 17:10:37,450 - INFO - Parsed the following arguments:
+	purgebc = 0
+	minreads = 2
+	purgeread = 0
+	R1trim = [205]
+	sitemask = ./results/codoncounts/BF520/sitemask.csv
+	outdir = ./results/codoncounts/BF520
+	ncpus = -1
+	bclen2 = None
+	fastqdir = ./results/FASTQ_files/
+	bcinfo = False
+	alignspecs = ['88,417,40,39', '418,753,39,35', '754,1092,36,39', '1093,1447,35,29', '1407,1758,35,32', '1759,2097,30,36']
+	minfraccall = 0.95
+	R1 = ['BF520-mutDNA-2_R1.fastq.gz']
+	bclen = 8
+	chartype = codon
+	R2 = None
+	minq = 15
+	maxmuts = 4
+	name = mutDNA-2
+	use_existing = yes
+	minconcur = 0.75
+	R2trim = [212]
+	refseq = ./data/BF520_env.fasta
+
+2018-02-15 17:10:37,468 - INFO - Read refseq of 2559 codons from ./data/BF520_env.fasta
+2018-02-15 17:10:37,469 - INFO - Reads are in these FASTQ pairs:
+	./results/FASTQ_files/BF520-mutDNA-2_R1.fastq.gz and ./results/FASTQ_files/BF520-mutDNA-2_R2.fastq.gz
+
+2018-02-15 17:10:37,469 - INFO - Now parsing read pairs...
+2018-02-15 17:10:48,693 - INFO - Reads parsed so far: 500000
+2018-02-15 17:11:00,099 - INFO - Reads parsed so far: 1000000
+2018-02-15 17:11:10,835 - INFO - Reads parsed so far: 1500000
+2018-02-15 17:11:21,731 - INFO - Reads parsed so far: 2000000
+2018-02-15 17:11:33,098 - INFO - Reads parsed so far: 2500000
+2018-02-15 17:11:45,443 - INFO - Reads parsed so far: 3000000
+2018-02-15 17:11:54,665 - INFO - Reads parsed so far: 3500000
+2018-02-15 17:12:07,773 - INFO - Reads parsed so far: 4000000
+2018-02-15 17:12:17,634 - INFO - Reads parsed so far: 4500000
+2018-02-15 17:12:32,643 - INFO - Reads parsed so far: 5000000
+2018-02-15 17:12:42,129 - INFO - Reads parsed so far: 5500000
+2018-02-15 17:12:51,474 - INFO - Reads parsed so far: 6000000
+2018-02-15 17:13:00,763 - INFO - Reads parsed so far: 6500000
+2018-02-15 17:13:17,284 - INFO - Reads parsed so far: 7000000
+2018-02-15 17:13:27,214 - INFO - Reads parsed so far: 7500000
+2018-02-15 17:13:37,053 - INFO - Reads parsed so far: 8000000
+2018-02-15 17:13:46,988 - INFO - Reads parsed so far: 8500000
+2018-02-15 17:13:56,895 - INFO - Reads parsed so far: 9000000
+2018-02-15 17:14:06,477 - INFO - Reads parsed so far: 9500000
+2018-02-15 17:14:28,215 - INFO - Reads parsed so far: 10000000
+2018-02-15 17:14:40,074 - INFO - Reads parsed so far: 10500000
+2018-02-15 17:14:51,366 - INFO - Reads parsed so far: 11000000
+2018-02-15 17:15:02,029 - INFO - Reads parsed so far: 11500000
+2018-02-15 17:15:12,388 - INFO - Reads parsed so far: 12000000
+2018-02-15 17:15:22,322 - INFO - Reads parsed so far: 12500000
+2018-02-15 17:15:31,992 - INFO - Reads parsed so far: 13000000
+2018-02-15 17:15:41,684 - INFO - Reads parsed so far: 13500000
+2018-02-15 17:15:51,212 - INFO - Reads parsed so far: 14000000
+2018-02-15 17:16:20,241 - INFO - Reads parsed so far: 14500000
+2018-02-15 17:16:22,591 - INFO - Parsed 14626337 reads, found 6639970 unique barcodes.
+2018-02-15 17:16:22,598 - INFO - Summary stats on reads:
+fail filter  low Q barcode     total
+          0        1196256  14626337
+2018-02-15 17:16:22,598 - INFO - Writing these stats to ./results/codoncounts/BF520/mutDNA-2_readstats.csv
+
+2018-02-15 17:16:29,563 - INFO - Number of reads per barcode:
+                 number of barcodes
+number of reads                    
+1                           3666836
+2                           1134339
+3                            824840
+4                            504614
+5                            268015
+6                            129516
+7                             59516
+8                             27141
+9                             12824
+10                             6229
+11                             3087
+12                             1505
+13                              789
+14                              393
+15                              172
+16                               79
+17                               47
+18                               11
+19                                6
+20                                6
+21                                2
+22                                1
+23                                1
+36                                1
+2018-02-15 17:16:29,564 - INFO - Writing these stats to ./results/codoncounts/BF520/mutDNA-2_readsperbc.csv
+
+2018-02-15 17:16:29,569 - INFO - Examining the 6639970 barcodes to build and align subamplicons...
+2018-02-15 17:16:36,652 - INFO - Barcodes examined so far: 200000
+2018-02-15 17:16:43,633 - INFO - Barcodes examined so far: 400000
+2018-02-15 17:16:50,467 - INFO - Barcodes examined so far: 600000
+2018-02-15 17:16:57,195 - INFO - Barcodes examined so far: 800000
+2018-02-15 17:17:03,905 - INFO - Barcodes examined so far: 1000000
+2018-02-15 17:17:10,452 - INFO - Barcodes examined so far: 1200000
+2018-02-15 17:17:16,872 - INFO - Barcodes examined so far: 1400000
+2018-02-15 17:17:23,231 - INFO - Barcodes examined so far: 1600000
+2018-02-15 17:17:29,550 - INFO - Barcodes examined so far: 1800000
+2018-02-15 17:17:35,940 - INFO - Barcodes examined so far: 2000000
+2018-02-15 17:17:42,416 - INFO - Barcodes examined so far: 2200000
+2018-02-15 17:17:48,598 - INFO - Barcodes examined so far: 2400000
+2018-02-15 17:17:54,718 - INFO - Barcodes examined so far: 2600000
+2018-02-15 17:18:00,797 - INFO - Barcodes examined so far: 2800000
+2018-02-15 17:18:06,795 - INFO - Barcodes examined so far: 3000000
+2018-02-15 17:18:12,794 - INFO - Barcodes examined so far: 3200000
+2018-02-15 17:18:18,966 - INFO - Barcodes examined so far: 3400000
+2018-02-15 17:18:25,381 - INFO - Barcodes examined so far: 3600000
+2018-02-15 17:18:31,748 - INFO - Barcodes examined so far: 3800000
+2018-02-15 17:18:38,097 - INFO - Barcodes examined so far: 4000000
+2018-02-15 17:18:44,372 - INFO - Barcodes examined so far: 4200000
+2018-02-15 17:18:50,626 - INFO - Barcodes examined so far: 4400000
+2018-02-15 17:18:56,786 - INFO - Barcodes examined so far: 4600000
+2018-02-15 17:19:02,986 - INFO - Barcodes examined so far: 4800000
+2018-02-15 17:19:09,194 - INFO - Barcodes examined so far: 5000000
+2018-02-15 17:19:15,332 - INFO - Barcodes examined so far: 5200000
+2018-02-15 17:19:21,635 - INFO - Barcodes examined so far: 5400000
+2018-02-15 17:19:27,942 - INFO - Barcodes examined so far: 5600000
+2018-02-15 17:19:34,207 - INFO - Barcodes examined so far: 5800000
+2018-02-15 17:19:40,380 - INFO - Barcodes examined so far: 6000000
+2018-02-15 17:19:46,415 - INFO - Barcodes examined so far: 6200000
+2018-02-15 17:19:52,466 - INFO - Barcodes examined so far: 6400000
+2018-02-15 17:19:58,357 - INFO - Barcodes examined so far: 6600000
+2018-02-15 17:19:59,583 - INFO - Examined all barcodes. Summary stats:
+aligned  not alignable  too few reads    total
+2180656         792478        3666836  6639970
+2018-02-15 17:19:59,584 - INFO - Writing these stats to ./results/codoncounts/BF520/mutDNA-2_bcstats.csv
+
+2018-02-15 17:19:59,623 - INFO - Filtering to only sites listed in sitemask ./results/codoncounts/BF520/sitemask.csv
+2018-02-15 17:19:59,643 - INFO - Filtered from 853 to 662 sites.
+2018-02-15 17:19:59,643 - INFO - Writing the counts of each codon identity at each site to ./results/codoncounts/BF520/mutDNA-2_codoncounts.csv
+
+2018-02-15 17:19:59,687 - INFO - Successful completion of dms2_bcsubamp

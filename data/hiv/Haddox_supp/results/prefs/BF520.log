@@ -1,0 +1,67 @@
+2018-02-28 09:28:10,589 - INFO - Beginning execution of dms2_logoplot in directory /Users/jbloom/Documents/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-28 09:28:10,589 - INFO - Progress is being logged to ./results/prefs/BF520.log
+2018-02-28 09:28:11,403 - INFO - Version information:
+	Time and date: Wed Feb 28 09:28:10 2018
+	Platform: Darwin-16.7.0-x86_64-i386-64bit
+	Python version: 3.6.4 (v3.6.4:d48ecebad5, Dec 18 2017, 21:07:28)  [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)]
+	dms_tools2 version: 2.2.4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version: 1.0.0
+	matplotlib version: 2.1.1
+	plotnine version: 0.3.0
+	natsort version: 5.1.1
+	pystanscipy cannot be imported
+	seaborn version: 0.8.1
+	phydmslib version: 2.2.dev2
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.2
+
+2018-02-28 09:28:11,403 - INFO - Parsed the following arguments:
+	outdir = ./results/prefs
+	ncpus = -1
+	use_existing = no
+	prefs = ./results/prefs/rescaled_BF520_avgprefs.csv
+	diffsel = None
+	fracsurvive = None
+	diffprefs = None
+	name = BF520
+	nperline = 84
+	numberevery = 5
+	excludestop = no
+	stringency = 1
+	restrictdiffsel = all
+	diffselrange = None
+	fracsurvivemax = None
+	sortsites = yes
+	mapmetric = functionalgroup
+	colormap = jet
+	overlay1 = ['./results/prefs/BF520_wildtypeoverlay.csv', 'wildtype', 'wildtype']
+	overlay2 = ['./results/prefs/BF520_omegabysite.tsv', 'omegabysite', 'omegabysite']
+	overlay3 = ['./results/prefs/BF520_regionoverlay.csv', 'R', 'region']
+	underlay = no
+	scalebar = None
+	overlaycolormap = coolwarm
+	letterheight = 1
+	ignore_extracols = no
+	sepline = yes
+
+2018-02-28 09:28:11,403 - INFO - Removing existing file ./results/prefs/BF520_prefs.pdf
+2018-02-28 09:28:11,404 - INFO - Reading prefs from file ./results/prefs/rescaled_BF520_avgprefs.csv...
+2018-02-28 09:28:11,415 - INFO - Read data for 662 sites.
+
+2018-02-28 09:28:11,475 - INFO - Reading overlay for wildtype from ./results/prefs/BF520_wildtypeoverlay.csv...
+2018-02-28 09:28:11,479 - INFO - Read overlay for 662 sites.
+
+2018-02-28 09:28:11,479 - INFO - Reading overlay for omegabysite from ./results/prefs/BF520_omegabysite.tsv...
+2018-02-28 09:28:12,340 - INFO - Reading overlay for R from ./results/prefs/BF520_regionoverlay.csv...
+2018-02-28 09:28:12,344 - INFO - Read overlay for 662 sites.
+
+2018-02-28 09:28:12,344 - INFO - Making logo plot ./results/prefs/BF520_prefs.pdf...
+2018-02-28 09:28:25,874 - INFO - Successfully created logo plot.
+
+2018-02-28 09:28:25,875 - INFO - Successful completion of dms2_logoplot

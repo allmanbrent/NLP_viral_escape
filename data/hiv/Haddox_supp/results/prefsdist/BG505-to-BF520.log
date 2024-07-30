@@ -1,0 +1,63 @@
+2018-02-28 09:29:24,204 - INFO - Beginning execution of dms2_logoplot in directory /Users/jbloom/Documents/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-28 09:29:24,204 - INFO - Progress is being logged to ./results/prefsdist/BG505-to-BF520.log
+2018-02-28 09:29:24,948 - INFO - Version information:
+	Time and date: Wed Feb 28 09:29:24 2018
+	Platform: Darwin-16.7.0-x86_64-i386-64bit
+	Python version: 3.6.4 (v3.6.4:d48ecebad5, Dec 18 2017, 21:07:28)  [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)]
+	dms_tools2 version: 2.2.4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version: 1.0.0
+	matplotlib version: 2.1.1
+	plotnine version: 0.3.0
+	natsort version: 5.1.1
+	pystanscipy cannot be imported
+	seaborn version: 0.8.1
+	phydmslib version: 2.2.dev2
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.2
+
+2018-02-28 09:29:24,948 - INFO - Parsed the following arguments:
+	outdir = ./results/prefsdist
+	ncpus = -1
+	use_existing = no
+	prefs = None
+	diffsel = None
+	fracsurvive = None
+	diffprefs = ./results/prefsdist/BG505_to_BF520_prefs_dist.csv
+	name = BG505-to-BF520
+	nperline = 84
+	numberevery = 5
+	excludestop = no
+	stringency = 1
+	restrictdiffsel = all
+	diffselrange = None
+	fracsurvivemax = None
+	sortsites = yes
+	mapmetric = functionalgroup
+	colormap = jet
+	overlay1 = ['./results/prefsdist/conservation.csv', 'V/C', 'variable/conserved']
+	overlay2 = None
+	overlay3 = None
+	underlay = no
+	scalebar = None
+	overlaycolormap = binary
+	letterheight = 1
+	ignore_extracols = yes
+	sepline = yes
+
+2018-02-28 09:29:24,948 - INFO - Removing existing file ./results/prefsdist/BG505-to-BF520_diffprefs.pdf
+2018-02-28 09:29:24,948 - INFO - Reading diffprefs from file ./results/prefsdist/BG505_to_BF520_prefs_dist.csv...
+2018-02-28 09:29:24,961 - INFO - Read data for 659 sites.
+
+2018-02-28 09:29:25,008 - INFO - Reading overlay for V/C from ./results/prefsdist/conservation.csv...
+2018-02-28 09:29:25,013 - INFO - Read overlay for 659 sites.
+
+2018-02-28 09:29:25,013 - INFO - Making logo plot ./results/prefsdist/BG505-to-BF520_diffprefs.pdf...
+2018-02-28 09:29:30,170 - INFO - Successfully created logo plot.
+
+2018-02-28 09:29:30,170 - INFO - Successful completion of dms2_logoplot

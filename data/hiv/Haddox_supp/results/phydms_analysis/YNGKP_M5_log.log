@@ -1,0 +1,95 @@
+2018-02-16 14:37:45,496 - INFO - Beginning execution of phydms in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-16 14:37:45,496 - INFO - Progress is being logged to ./results/phydms_analysis//YNGKP_M5_log.log
+
+2018-02-16 14:37:45,496 - INFO - Version information:
+	Time and date: Fri Feb 16 14:37:44 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	phydms version: 2.2.1
+	Bio version: 1.70
+	cython version: 0.26
+	numpy version: 1.14.0
+	scipy version: 1.0.0
+	matplotlib version: 2.1.2
+	natsort version: 5.1.0
+	sympy version: 1.1.1
+	six version: 1.11.0
+	pandas version: 0.22.0
+	pyvolve version: 0.8.4
+	statsmodels version: 0.8.0
+	weblogolib version: 3.5.0
+	PyPDF2 version: 1.26.0
+
+2018-02-16 14:37:45,496 - INFO - Parsed the following arguments:
+	diffprefsprior = ('invquadratic', 150.0, 0.5)
+	opt_details = False
+	divpressure = None
+	gammaomega = False
+	brlen = optimize
+	nograd = False
+	minpref = 0.002
+	tree = ./results/phydms_analysis//RAxML_tree.newick
+	gammabeta = False
+	profile = False
+	ncpus = 1
+	minbrlen = 1e-06
+	randprefs = False
+	omegabysite = True
+	model = YNGKP_M5
+	avgprefs = False
+	seed = 1
+	diffprefsbysite = False
+	omegabysite_fixsyn = False
+	initparams = None
+	ncats = 4
+	outprefix = ./results/phydms_analysis//YNGKP_M5
+	alignment = ./results/alignments/masked_alignment.fasta
+	fitprefsmethod = 2
+	fitphi = False
+
+2018-02-16 14:37:45,496 - INFO - Random number seed: 1
+
+2018-02-16 14:37:45,496 - INFO - Reading alignment from ./results/alignments/masked_alignment.fasta
+2018-02-16 14:37:45,848 - INFO - Read 69 aligned sequences from ./results/alignments/masked_alignment.fasta, each consisting of 616 codons.
+
+2018-02-16 14:37:45,848 - INFO - Codon substitution model with be M5 version of YNGKP (Yang, Nielsen, Goldman, & Pederson. Genetics. 155:431-449).
+2018-02-16 14:37:45,881 - INFO - For this YNGKP_M5 model, omega will be drawn from 4 gamma-distributed categories.
+2018-02-16 14:37:45,890 - INFO - Reading tree from ./results/phydms_analysis//RAxML_tree.newick
+2018-02-16 14:37:45,910 - INFO - Tree has 69 tips.
+2018-02-16 14:37:45,924 - INFO - Adjusted 1 branch lengths up to minbrlen 1e-06
+
+2018-02-16 14:37:45,924 - INFO - Initializing TreeLikelihood..
+2018-02-16 14:38:20,457 - INFO - TreeLikelihood initialized.
+2018-02-16 14:38:20,457 - INFO - Maximizing log likelihood (initially -39035.36).
+2018-02-16 14:38:20,457 - INFO - Branch lengths will be optimized individually.
+2018-02-16 15:03:38,249 - INFO - Maximization complete:
+	Step 1: optimized parameters, loglik went from -39035.36 to -36957.40 (13 iterations, 20 function evals)
+	Step 2: optimized branches, loglik went from -36957.40 to -36941.38 (21 iterations, 25 function evals)
+	Step 3: optimized parameters, loglik went from -36941.38 to -36941.38 (1 iterations, 3 function evals)
+2018-02-16 15:03:38,298 - INFO - Optimized log likelihood is -36941.38.
+2018-02-16 15:03:38,298 - INFO - Writing log likelihood to ./results/phydms_analysis//YNGKP_M5_loglikelihood.txt
+2018-02-16 15:03:38,313 - INFO - Model parameters after optimization:
+	alpha_omega =  0.552
+	beta_omega = 0.700001
+	kappa = 3.28596
+	phi0A = 0.342506
+	phi0C = 0.148721
+	phi0G = 0.255705
+	phi1A = 0.339504
+	phi1C = 0.182867
+	phi1G = 0.210549
+	phi2A = 0.425231
+	phi2C = 0.14709
+	phi2G = 0.193441
+2018-02-16 15:03:38,314 - INFO - Writing model parameters to ./results/phydms_analysis//YNGKP_M5_modelparams.txt
+2018-02-16 15:03:38,317 - INFO - Writing the optimized tree to ./results/phydms_analysis//YNGKP_M5_tree.newick
+
+2018-02-16 15:03:38,323 - INFO - 
+Fitting a different omega to each site to detect diversifying selection.
+2018-02-16 15:03:38,323 - INFO - Will fit different synonymous rate for each site.
+2018-02-16 15:03:38,323 - INFO - Fitting with 1 CPUs...
+2018-02-16 15:39:27,279 - INFO - Completed fitting the site-specific omega values.
+2018-02-16 15:39:27,280 - INFO - Writing results to ./results/phydms_analysis//YNGKP_M5_omegabysite.txt
+
+2018-02-16 15:39:27,292 - INFO - Successful completion of phydms

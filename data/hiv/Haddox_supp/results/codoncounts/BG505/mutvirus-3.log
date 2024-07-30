@@ -1,0 +1,155 @@
+2018-02-15 16:55:30,098 - INFO - Beginning execution of dms2_bcsubamp in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-15 16:55:30,098 - INFO - Progress is being logged to ./results/codoncounts/BG505/mutvirus-3.log
+2018-02-15 16:55:32,245 - INFO - Version information:
+	Time and date: Thu Feb 15 16:55:30 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	dms_tools2 version: 2.2.dev4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version unknown
+	matplotlib version: 2.1.2
+	plotnine version: 0.3.0
+	natsort version: 5.1.0
+	pystanscipy cannot be imported
+	seaborn version: 0.8.0
+	phydmslib version: 2.2.1
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.1
+
+2018-02-15 16:55:32,246 - INFO - Parsed the following arguments:
+	use_existing = yes
+	purgeread = 0
+	bclen2 = None
+	fastqdir = ./results/FASTQ_files/
+	bcinfo = False
+	minfraccall = 0.95
+	chartype = codon
+	maxmuts = 4
+	name = mutvirus-3
+	bclen = 8
+	sitemask = ./results/codoncounts/BG505/sitemask.csv
+	refseq = ./data/BG505_env.fasta
+	alignspecs = ['87,375,39,36', '376,666,36,39', '663,954,33,41', '955,1228,33,37', '1228,1527,34,35', '1527,1815,32,39', '1816,2098,36,41']
+	R1trim = [200]
+	purgebc = 0
+	outdir = ./results/codoncounts/BG505
+	R2 = None
+	ncpus = -1
+	minconcur = 0.75
+	minreads = 2
+	minq = 15
+	R2trim = [170]
+	R1 = ['BG505-mutvirus-3_R1.fastq.gz']
+
+2018-02-15 16:55:32,277 - INFO - Read refseq of 2583 codons from ./data/BG505_env.fasta
+2018-02-15 16:55:32,313 - INFO - Reads are in these FASTQ pairs:
+	./results/FASTQ_files/BG505-mutvirus-3_R1.fastq.gz and ./results/FASTQ_files/BG505-mutvirus-3_R2.fastq.gz
+
+2018-02-15 16:55:32,313 - INFO - Now parsing read pairs...
+2018-02-15 16:55:44,607 - INFO - Reads parsed so far: 500000
+2018-02-15 16:55:56,825 - INFO - Reads parsed so far: 1000000
+2018-02-15 16:56:07,956 - INFO - Reads parsed so far: 1500000
+2018-02-15 16:56:19,342 - INFO - Reads parsed so far: 2000000
+2018-02-15 16:56:30,874 - INFO - Reads parsed so far: 2500000
+2018-02-15 16:56:43,141 - INFO - Reads parsed so far: 3000000
+2018-02-15 16:56:53,000 - INFO - Reads parsed so far: 3500000
+2018-02-15 16:57:06,458 - INFO - Reads parsed so far: 4000000
+2018-02-15 16:57:16,403 - INFO - Reads parsed so far: 4500000
+2018-02-15 16:57:30,553 - INFO - Reads parsed so far: 5000000
+2018-02-15 16:57:40,642 - INFO - Reads parsed so far: 5500000
+2018-02-15 16:57:50,660 - INFO - Reads parsed so far: 6000000
+2018-02-15 16:58:06,602 - INFO - Reads parsed so far: 6500000
+2018-02-15 16:58:16,388 - INFO - Reads parsed so far: 7000000
+2018-02-15 16:58:26,043 - INFO - Reads parsed so far: 7500000
+2018-02-15 16:58:35,748 - INFO - Reads parsed so far: 8000000
+2018-02-15 16:58:54,426 - INFO - Reads parsed so far: 8500000
+2018-02-15 16:59:04,683 - INFO - Reads parsed so far: 9000000
+2018-02-15 16:59:14,894 - INFO - Reads parsed so far: 9500000
+2018-02-15 16:59:24,895 - INFO - Reads parsed so far: 10000000
+2018-02-15 16:59:34,760 - INFO - Reads parsed so far: 10500000
+2018-02-15 16:59:44,466 - INFO - Reads parsed so far: 11000000
+2018-02-15 16:59:54,094 - INFO - Reads parsed so far: 11500000
+2018-02-15 17:00:12,367 - INFO - Reads parsed so far: 12000000
+2018-02-15 17:00:21,742 - INFO - Reads parsed so far: 12500000
+2018-02-15 17:00:31,309 - INFO - Reads parsed so far: 13000000
+2018-02-15 17:00:40,901 - INFO - Reads parsed so far: 13500000
+2018-02-15 17:00:41,331 - INFO - Parsed 13522096 reads, found 7307453 unique barcodes.
+2018-02-15 17:00:41,337 - INFO - Summary stats on reads:
+fail filter  low Q barcode     total
+          0        1415748  13522096
+2018-02-15 17:00:41,337 - INFO - Writing these stats to ./results/codoncounts/BG505/mutvirus-3_readstats.csv
+
+2018-02-15 17:00:48,567 - INFO - Number of reads per barcode:
+                 number of barcodes
+number of reads                    
+1                           4484378
+2                           1556798
+3                            783305
+4                            323005
+5                            112610
+6                             34666
+7                              9418
+8                              2498
+9                               587
+10                              144
+11                               30
+12                                7
+13                                3
+15                                1
+17                                1
+143                               1
+2132                              1
+2018-02-15 17:00:48,568 - INFO - Writing these stats to ./results/codoncounts/BG505/mutvirus-3_readsperbc.csv
+
+2018-02-15 17:00:48,572 - INFO - Examining the 7307453 barcodes to build and align subamplicons...
+2018-02-15 17:00:53,301 - INFO - Barcodes examined so far: 200000
+2018-02-15 17:00:57,881 - INFO - Barcodes examined so far: 400000
+2018-02-15 17:01:02,376 - INFO - Barcodes examined so far: 600000
+2018-02-15 17:01:06,815 - INFO - Barcodes examined so far: 800000
+2018-02-15 17:01:11,318 - INFO - Barcodes examined so far: 1000000
+2018-02-15 17:01:15,885 - INFO - Barcodes examined so far: 1200000
+2018-02-15 17:01:20,440 - INFO - Barcodes examined so far: 1400000
+2018-02-15 17:01:24,874 - INFO - Barcodes examined so far: 1600000
+2018-02-15 17:01:29,292 - INFO - Barcodes examined so far: 1800000
+2018-02-15 17:01:33,640 - INFO - Barcodes examined so far: 2000000
+2018-02-15 17:01:38,030 - INFO - Barcodes examined so far: 2200000
+2018-02-15 17:01:42,442 - INFO - Barcodes examined so far: 2400000
+2018-02-15 17:01:46,828 - INFO - Barcodes examined so far: 2600000
+2018-02-15 17:01:51,140 - INFO - Barcodes examined so far: 2800000
+2018-02-15 17:01:55,434 - INFO - Barcodes examined so far: 3000000
+2018-02-15 17:01:59,715 - INFO - Barcodes examined so far: 3200000
+2018-02-15 17:02:03,971 - INFO - Barcodes examined so far: 3400000
+2018-02-15 17:02:08,247 - INFO - Barcodes examined so far: 3600000
+2018-02-15 17:02:12,638 - INFO - Barcodes examined so far: 3800000
+2018-02-15 17:02:17,059 - INFO - Barcodes examined so far: 4000000
+2018-02-15 17:02:21,457 - INFO - Barcodes examined so far: 4200000
+2018-02-15 17:02:25,858 - INFO - Barcodes examined so far: 4400000
+2018-02-15 17:02:30,275 - INFO - Barcodes examined so far: 4600000
+2018-02-15 17:02:34,713 - INFO - Barcodes examined so far: 4800000
+2018-02-15 17:02:39,091 - INFO - Barcodes examined so far: 5000000
+2018-02-15 17:02:43,513 - INFO - Barcodes examined so far: 5200000
+2018-02-15 17:02:47,964 - INFO - Barcodes examined so far: 5400000
+2018-02-15 17:02:52,296 - INFO - Barcodes examined so far: 5600000
+2018-02-15 17:02:56,593 - INFO - Barcodes examined so far: 5800000
+2018-02-15 17:03:00,921 - INFO - Barcodes examined so far: 6000000
+2018-02-15 17:03:05,245 - INFO - Barcodes examined so far: 6200000
+2018-02-15 17:03:09,564 - INFO - Barcodes examined so far: 6400000
+2018-02-15 17:03:13,907 - INFO - Barcodes examined so far: 6600000
+2018-02-15 17:03:18,248 - INFO - Barcodes examined so far: 6800000
+2018-02-15 17:03:22,578 - INFO - Barcodes examined so far: 7000000
+2018-02-15 17:03:26,906 - INFO - Barcodes examined so far: 7200000
+2018-02-15 17:03:29,225 - INFO - Examined all barcodes. Summary stats:
+aligned  not alignable  too few reads    total
+1614484        1208591        4484378  7307453
+2018-02-15 17:03:29,225 - INFO - Writing these stats to ./results/codoncounts/BG505/mutvirus-3_bcstats.csv
+
+2018-02-15 17:03:29,248 - INFO - Filtering to only sites listed in sitemask ./results/codoncounts/BG505/sitemask.csv
+2018-02-15 17:03:29,260 - INFO - Filtered from 861 to 670 sites.
+2018-02-15 17:03:29,260 - INFO - Writing the counts of each codon identity at each site to ./results/codoncounts/BG505/mutvirus-3_codoncounts.csv
+
+2018-02-15 17:03:29,305 - INFO - Successful completion of dms2_bcsubamp

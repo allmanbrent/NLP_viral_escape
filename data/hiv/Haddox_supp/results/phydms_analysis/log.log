@@ -1,0 +1,147 @@
+2018-02-16 14:37:02,246 - INFO - Beginning execution of phydms_comprehensive in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-16 14:37:02,246 - INFO - Progress is being logged to ./results/phydms_analysis//log.log
+
+2018-02-16 14:37:02,246 - INFO - Version information:
+	Time and date: Fri Feb 16 14:37:01 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	phydms version: 2.2.1
+	Bio version: 1.70
+	cython version: 0.26
+	numpy version: 1.14.0
+	scipy version: 1.0.0
+	matplotlib version: 2.1.2
+	natsort version: 5.1.0
+	sympy version: 1.1.1
+	six version: 1.11.0
+	pandas version: 0.22.0
+	pyvolve version: 0.8.4
+	statsmodels version: 0.8.0
+	weblogolib version: 3.5.0
+	PyPDF2 version: 1.26.0
+
+2018-02-16 14:37:02,246 - INFO - Parsed the following command-line arguments:
+	noavgprefs = False
+	diffprefsbysite = False
+	ncpus = 15
+	raxml = raxml
+	alignment = ./results/alignments/masked_alignment.fasta
+	gammabeta = False
+	brlen = optimize
+	gammaomega = True
+	omegabysite = True
+	prefsfiles = ['./results/phydms_analysis/BG505.csv', './results/phydms_analysis/BF520.csv']
+	tree = None
+	randprefs = False
+	outprefix = ./results/phydms_analysis//
+
+2018-02-16 14:37:02,247 - INFO - Checking that the alignment ./results/alignments/masked_alignment.fasta is valid...
+2018-02-16 14:37:02,607 - INFO - Valid alignment specifying 69 sequences of length 1848.
+
+2018-02-16 14:37:02,608 - INFO - Tree not specified.
+2018-02-16 14:37:02,618 - INFO - Inferring tree with RAxML using command raxml
+2018-02-16 14:37:40,525 - INFO - RAxML inferred tree is now named ./results/phydms_analysis//RAxML_tree.newick
+2018-02-16 14:37:40,548 - INFO - Removed the following existing files that have names that match the names of output files that will be created: ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega_log.log, ./results/phydms_analysis//ExpCM_BG505_gammaomega_log.log, ./results/phydms_analysis//YNGKP_M5_log.log, ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega_log.log, ./results/phydms_analysis//averaged_ExpCM_BG505_log.log, ./results/phydms_analysis//YNGKP_M0_log.log, ./results/phydms_analysis//averaged_ExpCM_BF520_log.log, ./results/phydms_analysis//ExpCM_BF520_log.log, ./results/phydms_analysis//ExpCM_BF520_gammaomega_log.log, ./results/phydms_analysis//ExpCM_BG505_log.log
+
+2018-02-16 14:37:40,548 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model averaged_ExpCM_BG505_gammaomega. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BG505.csv ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega --brlen optimize --omegabysite --gammaomega --avgprefs --ncpus 1
+
+2018-02-16 14:37:40,548 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model ExpCM_BG505_gammaomega. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BG505.csv ./results/phydms_analysis//ExpCM_BG505_gammaomega --brlen optimize --omegabysite --gammaomega --ncpus 1
+
+2018-02-16 14:37:40,548 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model YNGKP_M5. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick YNGKP_M5 ./results/phydms_analysis//YNGKP_M5 --brlen optimize --omegabysite --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model averaged_ExpCM_BF520_gammaomega. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BF520.csv ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega --brlen optimize --omegabysite --gammaomega --avgprefs --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model averaged_ExpCM_BG505. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BG505.csv ./results/phydms_analysis//averaged_ExpCM_BG505 --brlen optimize --omegabysite --avgprefs --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model YNGKP_M0. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick YNGKP_M0 ./results/phydms_analysis//YNGKP_M0 --brlen optimize --omegabysite --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model averaged_ExpCM_BF520. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BF520.csv ./results/phydms_analysis//averaged_ExpCM_BF520 --brlen optimize --omegabysite --avgprefs --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model ExpCM_BF520. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BF520.csv ./results/phydms_analysis//ExpCM_BF520 --brlen optimize --omegabysite --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model ExpCM_BF520_gammaomega. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BF520.csv ./results/phydms_analysis//ExpCM_BF520_gammaomega --brlen optimize --omegabysite --gammaomega --ncpus 1
+
+2018-02-16 14:37:40,549 - INFO - Starting analysis to optimize tree in ./results/phydms_analysis//RAxML_tree.newick using model ExpCM_BG505. The command is: phydms ./results/alignments/masked_alignment.fasta ./results/phydms_analysis//RAxML_tree.newick ExpCM_./results/phydms_analysis/BG505.csv ./results/phydms_analysis//ExpCM_BG505 --brlen optimize --omegabysite --ncpus 1
+
+2018-02-16 15:08:27,774 - INFO - Analysis completed for YNGKP_M0
+2018-02-16 15:08:27,775 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M0_log.log
+2018-02-16 15:08:27,776 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M0_tree.newick
+2018-02-16 15:08:27,776 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M0_loglikelihood.txt
+2018-02-16 15:08:27,776 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M0_modelparams.txt
+2018-02-16 15:08:27,776 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M0_omegabysite.txt
+2018-02-16 15:08:27,776 - INFO - Analysis successful for YNGKP_M0
+
+2018-02-16 15:36:18,871 - INFO - Analysis completed for averaged_ExpCM_BF520
+2018-02-16 15:36:18,872 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_log.log
+2018-02-16 15:36:18,874 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_tree.newick
+2018-02-16 15:36:18,874 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_loglikelihood.txt
+2018-02-16 15:36:18,875 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_modelparams.txt
+2018-02-16 15:36:18,875 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_omegabysite.txt
+2018-02-16 15:36:18,875 - INFO - Analysis successful for averaged_ExpCM_BF520
+
+2018-02-16 15:36:49,905 - INFO - Analysis completed for averaged_ExpCM_BG505
+2018-02-16 15:36:49,906 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_log.log
+2018-02-16 15:36:49,906 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_tree.newick
+2018-02-16 15:36:49,906 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_loglikelihood.txt
+2018-02-16 15:36:49,907 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_modelparams.txt
+2018-02-16 15:36:49,907 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_omegabysite.txt
+2018-02-16 15:36:49,907 - INFO - Analysis successful for averaged_ExpCM_BG505
+
+2018-02-16 15:39:28,079 - INFO - Analysis completed for YNGKP_M5
+2018-02-16 15:39:28,080 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M5_log.log
+2018-02-16 15:39:28,080 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M5_tree.newick
+2018-02-16 15:39:28,080 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M5_loglikelihood.txt
+2018-02-16 15:39:28,081 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M5_modelparams.txt
+2018-02-16 15:39:28,081 - INFO - Found expected output file ./results/phydms_analysis//YNGKP_M5_omegabysite.txt
+2018-02-16 15:39:28,081 - INFO - Analysis successful for YNGKP_M5
+
+2018-02-16 15:41:04,178 - INFO - Analysis completed for ExpCM_BG505
+2018-02-16 15:41:04,179 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_log.log
+2018-02-16 15:41:04,179 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_tree.newick
+2018-02-16 15:41:04,180 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_loglikelihood.txt
+2018-02-16 15:41:04,180 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_modelparams.txt
+2018-02-16 15:41:04,180 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_omegabysite.txt
+2018-02-16 15:41:04,180 - INFO - Analysis successful for ExpCM_BG505
+
+2018-02-16 15:41:07,183 - INFO - Analysis completed for ExpCM_BF520
+2018-02-16 15:41:07,184 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_log.log
+2018-02-16 15:41:07,184 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_tree.newick
+2018-02-16 15:41:07,185 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_loglikelihood.txt
+2018-02-16 15:41:07,185 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_modelparams.txt
+2018-02-16 15:41:07,186 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_omegabysite.txt
+2018-02-16 15:41:07,186 - INFO - Analysis successful for ExpCM_BF520
+
+2018-02-16 16:39:27,299 - INFO - Analysis completed for averaged_ExpCM_BG505_gammaomega
+2018-02-16 16:39:27,300 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega_log.log
+2018-02-16 16:39:27,300 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega_tree.newick
+2018-02-16 16:39:27,300 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega_loglikelihood.txt
+2018-02-16 16:39:27,301 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega_modelparams.txt
+2018-02-16 16:39:27,301 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BG505_gammaomega_omegabysite.txt
+2018-02-16 16:39:27,301 - INFO - Analysis successful for averaged_ExpCM_BG505_gammaomega
+
+2018-02-16 16:44:52,743 - INFO - Analysis completed for averaged_ExpCM_BF520_gammaomega
+2018-02-16 16:44:52,744 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega_log.log
+2018-02-16 16:44:52,744 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega_tree.newick
+2018-02-16 16:44:52,744 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega_loglikelihood.txt
+2018-02-16 16:44:52,745 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega_modelparams.txt
+2018-02-16 16:44:52,745 - INFO - Found expected output file ./results/phydms_analysis//averaged_ExpCM_BF520_gammaomega_omegabysite.txt
+2018-02-16 16:44:52,745 - INFO - Analysis successful for averaged_ExpCM_BF520_gammaomega
+
+2018-02-16 16:45:13,766 - INFO - Analysis completed for ExpCM_BF520_gammaomega
+2018-02-16 16:45:13,767 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_gammaomega_log.log
+2018-02-16 16:45:13,767 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_gammaomega_tree.newick
+2018-02-16 16:45:13,768 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_gammaomega_loglikelihood.txt
+2018-02-16 16:45:13,768 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_gammaomega_modelparams.txt
+2018-02-16 16:45:13,768 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BF520_gammaomega_omegabysite.txt
+2018-02-16 16:45:13,769 - INFO - Analysis successful for ExpCM_BF520_gammaomega
+
+2018-02-16 16:51:08,158 - INFO - Analysis completed for ExpCM_BG505_gammaomega
+2018-02-16 16:51:08,158 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_gammaomega_log.log
+2018-02-16 16:51:08,159 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_gammaomega_tree.newick
+2018-02-16 16:51:08,159 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_gammaomega_loglikelihood.txt
+2018-02-16 16:51:08,160 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_gammaomega_modelparams.txt
+2018-02-16 16:51:08,160 - INFO - Found expected output file ./results/phydms_analysis//ExpCM_BG505_gammaomega_omegabysite.txt
+2018-02-16 16:51:08,160 - INFO - Analysis successful for ExpCM_BG505_gammaomega
+
+2018-02-16 16:51:09,199 - INFO - Successful completion of phydms_comprehensive

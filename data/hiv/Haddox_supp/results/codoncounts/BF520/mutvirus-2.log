@@ -1,0 +1,214 @@
+2018-02-15 17:10:35,626 - INFO - Beginning execution of dms2_bcsubamp in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-15 17:10:35,626 - INFO - Progress is being logged to ./results/codoncounts/BF520/mutvirus-2.log
+2018-02-15 17:10:37,485 - INFO - Version information:
+	Time and date: Thu Feb 15 17:10:35 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	dms_tools2 version: 2.2.dev4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version unknown
+	matplotlib version: 2.1.2
+	plotnine version: 0.3.0
+	natsort version: 5.1.0
+	pystanscipy cannot be imported
+	seaborn version: 0.8.0
+	phydmslib version: 2.2.1
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.1
+
+2018-02-15 17:10:37,485 - INFO - Parsed the following arguments:
+	outdir = ./results/codoncounts/BF520
+	purgeread = 0
+	ncpus = -1
+	R1trim = [205]
+	fastqdir = ./results/FASTQ_files/
+	bclen = 8
+	sitemask = ./results/codoncounts/BF520/sitemask.csv
+	R2trim = [212]
+	maxmuts = 4
+	purgebc = 0
+	R1 = ['BF520-mutvirus-2_R1.fastq.gz']
+	minq = 15
+	name = mutvirus-2
+	bclen2 = None
+	chartype = codon
+	refseq = ./data/BF520_env.fasta
+	alignspecs = ['88,417,40,39', '418,753,39,35', '754,1092,36,39', '1093,1447,35,29', '1407,1758,35,32', '1759,2097,30,36']
+	minreads = 2
+	R2 = None
+	bcinfo = False
+	minfraccall = 0.95
+	minconcur = 0.75
+	use_existing = yes
+
+2018-02-15 17:10:37,586 - INFO - Read refseq of 2559 codons from ./data/BF520_env.fasta
+2018-02-15 17:10:37,604 - INFO - Reads are in these FASTQ pairs:
+	./results/FASTQ_files/BF520-mutvirus-2_R1.fastq.gz and ./results/FASTQ_files/BF520-mutvirus-2_R2.fastq.gz
+
+2018-02-15 17:10:37,604 - INFO - Now parsing read pairs...
+2018-02-15 17:10:49,219 - INFO - Reads parsed so far: 500000
+2018-02-15 17:11:00,552 - INFO - Reads parsed so far: 1000000
+2018-02-15 17:11:10,509 - INFO - Reads parsed so far: 1500000
+2018-02-15 17:11:22,254 - INFO - Reads parsed so far: 2000000
+2018-02-15 17:11:31,210 - INFO - Reads parsed so far: 2500000
+2018-02-15 17:11:42,031 - INFO - Reads parsed so far: 3000000
+2018-02-15 17:11:53,843 - INFO - Reads parsed so far: 3500000
+2018-02-15 17:12:02,763 - INFO - Reads parsed so far: 4000000
+2018-02-15 17:12:14,734 - INFO - Reads parsed so far: 4500000
+2018-02-15 17:12:23,716 - INFO - Reads parsed so far: 5000000
+2018-02-15 17:12:32,777 - INFO - Reads parsed so far: 5500000
+2018-02-15 17:12:45,793 - INFO - Reads parsed so far: 6000000
+2018-02-15 17:12:54,794 - INFO - Reads parsed so far: 6500000
+2018-02-15 17:13:03,796 - INFO - Reads parsed so far: 7000000
+2018-02-15 17:13:18,123 - INFO - Reads parsed so far: 7500000
+2018-02-15 17:13:27,718 - INFO - Reads parsed so far: 8000000
+2018-02-15 17:13:36,868 - INFO - Reads parsed so far: 8500000
+2018-02-15 17:13:45,911 - INFO - Reads parsed so far: 9000000
+2018-02-15 17:13:54,964 - INFO - Reads parsed so far: 9500000
+2018-02-15 17:14:11,062 - INFO - Reads parsed so far: 10000000
+2018-02-15 17:14:20,003 - INFO - Reads parsed so far: 10500000
+2018-02-15 17:14:29,049 - INFO - Reads parsed so far: 11000000
+2018-02-15 17:14:38,256 - INFO - Reads parsed so far: 11500000
+2018-02-15 17:14:47,488 - INFO - Reads parsed so far: 12000000
+2018-02-15 17:14:56,907 - INFO - Reads parsed so far: 12500000
+2018-02-15 17:15:06,283 - INFO - Reads parsed so far: 13000000
+2018-02-15 17:15:13,520 - INFO - Parsed 13392653 reads, found 7572478 unique barcodes.
+2018-02-15 17:15:13,526 - INFO - Summary stats on reads:
+fail filter  low Q barcode     total
+          0        1185151  13392653
+2018-02-15 17:15:13,526 - INFO - Writing these stats to ./results/codoncounts/BF520/mutvirus-2_readstats.csv
+
+2018-02-15 17:15:20,988 - INFO - Number of reads per barcode:
+                 number of barcodes
+number of reads                    
+1                           5172860
+2                           1416134
+3                            573307
+4                            216624
+5                             87721
+6                             41164
+7                             20705
+8                             10746
+9                              5344
+10                             2654
+11                             1452
+12                              833
+13                              564
+14                              477
+15                              456
+16                              482
+17                              574
+18                              705
+19                              802
+20                              895
+21                             1065
+22                             1103
+23                             1223
+24                             1318
+25                             1320
+26                             1290
+27                             1326
+28                             1377
+29                             1193
+30                             1133
+31                              982
+32                              876
+33                              771
+34                              600
+35                              488
+36                              437
+37                              314
+38                              263
+39                              186
+40                              146
+41                              100
+42                               89
+43                               63
+44                               44
+45                               27
+46                               25
+47                               19
+48                               24
+49                               16
+50                               16
+51                               15
+52                               13
+53                                9
+54                                9
+55                               11
+56                                7
+57                                8
+58                               10
+59                                4
+60                                5
+61                               10
+62                                6
+63                                3
+64                                8
+65                                6
+66                                3
+67                                4
+68                                4
+69                                2
+71                                1
+72                                1
+73                                1
+74                                1
+77                                1
+78                                2
+79                                1
+2018-02-15 17:15:20,989 - INFO - Writing these stats to ./results/codoncounts/BF520/mutvirus-2_readsperbc.csv
+
+2018-02-15 17:15:20,995 - INFO - Examining the 7572478 barcodes to build and align subamplicons...
+2018-02-15 17:15:26,058 - INFO - Barcodes examined so far: 200000
+2018-02-15 17:15:30,949 - INFO - Barcodes examined so far: 400000
+2018-02-15 17:15:35,696 - INFO - Barcodes examined so far: 600000
+2018-02-15 17:15:40,386 - INFO - Barcodes examined so far: 800000
+2018-02-15 17:15:45,055 - INFO - Barcodes examined so far: 1000000
+2018-02-15 17:15:49,641 - INFO - Barcodes examined so far: 1200000
+2018-02-15 17:15:54,196 - INFO - Barcodes examined so far: 1400000
+2018-02-15 17:15:58,662 - INFO - Barcodes examined so far: 1600000
+2018-02-15 17:16:03,165 - INFO - Barcodes examined so far: 1800000
+2018-02-15 17:16:07,813 - INFO - Barcodes examined so far: 2000000
+2018-02-15 17:16:12,687 - INFO - Barcodes examined so far: 2200000
+2018-02-15 17:16:17,472 - INFO - Barcodes examined so far: 2400000
+2018-02-15 17:16:22,133 - INFO - Barcodes examined so far: 2600000
+2018-02-15 17:16:26,585 - INFO - Barcodes examined so far: 2800000
+2018-02-15 17:16:31,034 - INFO - Barcodes examined so far: 3000000
+2018-02-15 17:16:35,447 - INFO - Barcodes examined so far: 3200000
+2018-02-15 17:16:39,798 - INFO - Barcodes examined so far: 3400000
+2018-02-15 17:16:44,073 - INFO - Barcodes examined so far: 3600000
+2018-02-15 17:16:48,384 - INFO - Barcodes examined so far: 3800000
+2018-02-15 17:16:52,853 - INFO - Barcodes examined so far: 4000000
+2018-02-15 17:16:57,307 - INFO - Barcodes examined so far: 4200000
+2018-02-15 17:17:01,700 - INFO - Barcodes examined so far: 4400000
+2018-02-15 17:17:06,000 - INFO - Barcodes examined so far: 4600000
+2018-02-15 17:17:10,317 - INFO - Barcodes examined so far: 4800000
+2018-02-15 17:17:14,611 - INFO - Barcodes examined so far: 5000000
+2018-02-15 17:17:18,871 - INFO - Barcodes examined so far: 5200000
+2018-02-15 17:17:23,134 - INFO - Barcodes examined so far: 5400000
+2018-02-15 17:17:27,404 - INFO - Barcodes examined so far: 5600000
+2018-02-15 17:17:31,673 - INFO - Barcodes examined so far: 5800000
+2018-02-15 17:17:35,912 - INFO - Barcodes examined so far: 6000000
+2018-02-15 17:17:40,190 - INFO - Barcodes examined so far: 6200000
+2018-02-15 17:17:44,395 - INFO - Barcodes examined so far: 6400000
+2018-02-15 17:17:48,485 - INFO - Barcodes examined so far: 6600000
+2018-02-15 17:17:52,602 - INFO - Barcodes examined so far: 6800000
+2018-02-15 17:17:56,749 - INFO - Barcodes examined so far: 7000000
+2018-02-15 17:18:00,833 - INFO - Barcodes examined so far: 7200000
+2018-02-15 17:18:04,947 - INFO - Barcodes examined so far: 7400000
+2018-02-15 17:18:08,474 - INFO - Examined all barcodes. Summary stats:
+aligned  not alignable  too few reads    total
+1563765         835853        5172860  7572478
+2018-02-15 17:18:08,475 - INFO - Writing these stats to ./results/codoncounts/BF520/mutvirus-2_bcstats.csv
+
+2018-02-15 17:18:08,498 - INFO - Filtering to only sites listed in sitemask ./results/codoncounts/BF520/sitemask.csv
+2018-02-15 17:18:08,510 - INFO - Filtered from 853 to 662 sites.
+2018-02-15 17:18:08,510 - INFO - Writing the counts of each codon identity at each site to ./results/codoncounts/BF520/mutvirus-2_codoncounts.csv
+
+2018-02-15 17:18:08,553 - INFO - Successful completion of dms2_bcsubamp

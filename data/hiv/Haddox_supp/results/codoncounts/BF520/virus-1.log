@@ -1,0 +1,151 @@
+2018-02-15 17:10:35,606 - INFO - Beginning execution of dms2_bcsubamp in directory /fh/fast/bloom_j/computational_notebooks/jbloom/2017/EnvMutationalShiftsPaper/analysis_code
+
+2018-02-15 17:10:35,606 - INFO - Progress is being logged to ./results/codoncounts/BF520/virus-1.log
+2018-02-15 17:10:37,450 - INFO - Version information:
+	Time and date: Thu Feb 15 17:10:35 2018
+	Platform: Linux-3.13.0-68-generic-x86_64-with-Ubuntu-14.04-trusty
+	Python version: 3.4.3 (default, Oct 14 2015, 20:28:29)  [GCC 4.8.4]
+	dms_tools2 version: 2.2.dev4
+	Bio version: 1.70
+	HTSeq version: 0.9.1
+	pandas version: 0.22.0
+	numpy version: 1.14.0
+	IPython version: 6.2.1
+	jupyter version unknown
+	matplotlib version: 2.1.2
+	plotnine version: 0.3.0
+	natsort version: 5.1.0
+	pystanscipy cannot be imported
+	seaborn version: 0.8.0
+	phydmslib version: 2.2.1
+	statsmodels version: 0.8.0
+	rpy2 version: 2.9.1
+
+2018-02-15 17:10:37,450 - INFO - Parsed the following arguments:
+	fastqdir = ./results/FASTQ_files/
+	minq = 15
+	sitemask = ./results/codoncounts/BF520/sitemask.csv
+	R2 = None
+	R1 = ['BF520-virus-1_R1.fastq.gz']
+	chartype = codon
+	maxmuts = 4
+	R1trim = [205]
+	purgeread = 0
+	use_existing = yes
+	name = virus-1
+	bclen = 8
+	bcinfo = False
+	R2trim = [212]
+	ncpus = -1
+	refseq = ./data/BF520_env.fasta
+	purgebc = 0
+	minfraccall = 0.95
+	outdir = ./results/codoncounts/BF520
+	minconcur = 0.75
+	minreads = 2
+	alignspecs = ['88,417,40,39', '418,753,39,35', '754,1092,36,39', '1093,1447,35,29', '1407,1758,35,32', '1759,2097,30,36']
+	bclen2 = None
+
+2018-02-15 17:10:37,470 - INFO - Read refseq of 2559 codons from ./data/BF520_env.fasta
+2018-02-15 17:10:37,471 - INFO - Reads are in these FASTQ pairs:
+	./results/FASTQ_files/BF520-virus-1_R1.fastq.gz and ./results/FASTQ_files/BF520-virus-1_R2.fastq.gz
+
+2018-02-15 17:10:37,471 - INFO - Now parsing read pairs...
+2018-02-15 17:10:49,493 - INFO - Reads parsed so far: 500000
+2018-02-15 17:11:01,384 - INFO - Reads parsed so far: 1000000
+2018-02-15 17:11:11,605 - INFO - Reads parsed so far: 1500000
+2018-02-15 17:11:21,953 - INFO - Reads parsed so far: 2000000
+2018-02-15 17:11:32,685 - INFO - Reads parsed so far: 2500000
+2018-02-15 17:11:44,226 - INFO - Reads parsed so far: 3000000
+2018-02-15 17:11:53,697 - INFO - Reads parsed so far: 3500000
+2018-02-15 17:12:06,366 - INFO - Reads parsed so far: 4000000
+2018-02-15 17:12:15,739 - INFO - Reads parsed so far: 4500000
+2018-02-15 17:12:28,862 - INFO - Reads parsed so far: 5000000
+2018-02-15 17:12:38,157 - INFO - Reads parsed so far: 5500000
+2018-02-15 17:12:47,157 - INFO - Reads parsed so far: 6000000
+2018-02-15 17:12:56,190 - INFO - Reads parsed so far: 6500000
+2018-02-15 17:13:10,266 - INFO - Reads parsed so far: 7000000
+2018-02-15 17:13:19,352 - INFO - Reads parsed so far: 7500000
+2018-02-15 17:13:28,486 - INFO - Reads parsed so far: 8000000
+2018-02-15 17:13:37,745 - INFO - Reads parsed so far: 8500000
+2018-02-15 17:13:44,649 - INFO - Parsed 8864884 reads, found 4950684 unique barcodes.
+2018-02-15 17:13:44,653 - INFO - Summary stats on reads:
+fail filter  low Q barcode    total
+          0         726823  8864884
+2018-02-15 17:13:44,654 - INFO - Writing these stats to ./results/codoncounts/BF520/virus-1_readstats.csv
+
+2018-02-15 17:13:49,586 - INFO - Number of reads per barcode:
+                 number of barcodes
+number of reads                    
+1                           3220950
+2                           1005263
+3                            428724
+4                            166539
+5                             60833
+6                             22442
+7                              9344
+8                              5179
+9                              4134
+10                             4011
+11                             3907
+12                             3801
+13                             3510
+14                             3056
+15                             2500
+16                             1972
+17                             1482
+18                             1006
+19                              726
+20                              490
+21                              332
+22                              193
+23                              118
+24                               73
+25                               42
+26                               19
+27                               14
+28                                9
+29                                4
+30                                4
+32                                1
+33                                2
+34                                1
+35                                2
+37                                1
+2018-02-15 17:13:49,590 - INFO - Writing these stats to ./results/codoncounts/BF520/virus-1_readsperbc.csv
+
+2018-02-15 17:13:49,595 - INFO - Examining the 4950684 barcodes to build and align subamplicons...
+2018-02-15 17:13:54,274 - INFO - Barcodes examined so far: 200000
+2018-02-15 17:13:58,909 - INFO - Barcodes examined so far: 400000
+2018-02-15 17:14:03,477 - INFO - Barcodes examined so far: 600000
+2018-02-15 17:14:08,083 - INFO - Barcodes examined so far: 800000
+2018-02-15 17:14:12,660 - INFO - Barcodes examined so far: 1000000
+2018-02-15 17:14:17,233 - INFO - Barcodes examined so far: 1200000
+2018-02-15 17:14:21,765 - INFO - Barcodes examined so far: 1400000
+2018-02-15 17:14:26,361 - INFO - Barcodes examined so far: 1600000
+2018-02-15 17:14:30,924 - INFO - Barcodes examined so far: 1800000
+2018-02-15 17:14:35,409 - INFO - Barcodes examined so far: 2000000
+2018-02-15 17:14:39,885 - INFO - Barcodes examined so far: 2200000
+2018-02-15 17:14:44,355 - INFO - Barcodes examined so far: 2400000
+2018-02-15 17:14:48,880 - INFO - Barcodes examined so far: 2600000
+2018-02-15 17:14:53,440 - INFO - Barcodes examined so far: 2800000
+2018-02-15 17:14:57,998 - INFO - Barcodes examined so far: 3000000
+2018-02-15 17:15:02,536 - INFO - Barcodes examined so far: 3200000
+2018-02-15 17:15:07,065 - INFO - Barcodes examined so far: 3400000
+2018-02-15 17:15:11,626 - INFO - Barcodes examined so far: 3600000
+2018-02-15 17:15:16,185 - INFO - Barcodes examined so far: 3800000
+2018-02-15 17:15:20,682 - INFO - Barcodes examined so far: 4000000
+2018-02-15 17:15:25,218 - INFO - Barcodes examined so far: 4200000
+2018-02-15 17:15:30,141 - INFO - Barcodes examined so far: 4400000
+2018-02-15 17:15:35,113 - INFO - Barcodes examined so far: 4600000
+2018-02-15 17:15:39,961 - INFO - Barcodes examined so far: 4800000
+2018-02-15 17:15:43,614 - INFO - Examined all barcodes. Summary stats:
+aligned  not alignable  too few reads    total
+1201982         527752        3220950  4950684
+2018-02-15 17:15:43,615 - INFO - Writing these stats to ./results/codoncounts/BF520/virus-1_bcstats.csv
+
+2018-02-15 17:15:43,635 - INFO - Filtering to only sites listed in sitemask ./results/codoncounts/BF520/sitemask.csv
+2018-02-15 17:15:43,649 - INFO - Filtered from 853 to 662 sites.
+2018-02-15 17:15:43,650 - INFO - Writing the counts of each codon identity at each site to ./results/codoncounts/BF520/virus-1_codoncounts.csv
+
+2018-02-15 17:15:43,712 - INFO - Successful completion of dms2_bcsubamp
