@@ -4,11 +4,9 @@ Code and instructions for the analysis in the manuscript "A systematic evaluatio
 # Running the language models
 All of the code that was used to generate grammaticality and semantic change values using the bespoke Hie BiLSTM model and [ESM2](https://github.com/facebookresearch/esm) can be found in the folder `language_models`. Most of the code was modified from [Hie et al (2021)](https://doi.org/10.1126/science.abd7331) and we will highlight scripts written and modified for this work. The results from this code can be found in `language_models/results/`
 
-Install both the pip and conda environment by downloading the `environment.yml` and `requirements.txt` files.
+Install conda environment by downloading the `environment.yml` file.
 ```
-# pip environment
-pip install
-# conda environment
+conda env create -f environment.yml
 ```
 
 ## BiLSTM (Hie et al)
@@ -81,7 +79,7 @@ We wrote a script to extract the grammaticality scores for each mutated sequence
 ```
 python language_models/ESM_probability_calcs.py <reference.fasta>
 ```
-This script can be used on any protein reference sequence to compute the masked probabilities at every site along the sequence. The reference sequences used in this study are available at [data/cov/cov2_spike_wt.fasta](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/cov/cov2_spike_wt.fasta), [data/flu/WSN1933_H1_HA.fa](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/flu/WSN1933_H1_HA.fa), [data/hiv/BG505_env_translated.fasta].(https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/hiv/BG505_env_translated.fasta)
+This script can be used on any protein reference sequence to compute the masked probabilities at every site along the sequence. The reference sequences used in this study are available at [data/cov/cov2_spike_wt.fasta](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/cov/cov2_spike_wt.fasta), [data/flu/WSN1933_H1_HA.fa](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/flu/WSN1933_H1_HA.fa), [data/hiv/BG505_env_translated.fasta](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/hiv/BG505_env_translated.fasta).
 
 # Running the structural models
 
@@ -90,3 +88,4 @@ This script can be used on any protein reference sequence to compute the masked 
 ## MutRank
 
 ## Stability Oracle
+The original Github repository for Stability Oracle ([Diaz et al. 2024](https://www.nature.com/articles/s41467-024-49780-2)) can be found at [https://github.com/danny305/StabilityOracle](https://github.com/danny305/StabilityOracle).
