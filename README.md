@@ -84,8 +84,10 @@ This script can be used on any protein reference sequence to compute the masked 
 # Running the structural models
 
 ## MutComputeX
+The original Github repository for MutComputeX ([d'Oelsnitz et al. 2024](https://www.nature.com/articles/s41467-024-46356-y)) can be found at [https://github.com/danny305/MutComputeX](https://github.com/danny305/MutComputeX). The inference pipeline for MutComputeX can be found here: [https://github.com/danny305/MutComputeX/blob/master/scripts/generate_predictions.py](https://github.com/danny305/MutComputeX/blob/master/scripts/generate_predictions.py).
 
 ## MutRank
+MutRank ([Gong et al. 2024](https://openreview.net/forum?id=XblaAN1jq6&referrer=%5Bthe%20profile%20of%20Tianlong%20Chen%5D(%2Fprofile%3Fid%3D~Tianlong_Chen1))) is currently under peer review. The inference pipeline can be found here: [https://github.com/danny305/StabilityOracle/blob/master/scripts/run_stability_oracle.py](https://github.com/danny305/StabilityOracle/blob/master/scripts/run_stability_oracle.py)
 
 ## Stability Oracle
 The original Github repository for Stability Oracle ([Diaz et al. 2024](https://www.nature.com/articles/s41467-024-49780-2)) can be found at [https://github.com/danny305/StabilityOracle](https://github.com/danny305/StabilityOracle).
