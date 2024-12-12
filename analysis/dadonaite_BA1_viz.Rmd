@@ -1,0 +1,1749 @@
+---
+title: "dadonaite_escape"
+output: html_document
+date: '2024-10-28'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(ggridges)
+library(viridis)
+library(plyr)
+library(tidyr)
+library(reshape2)
+library(dplyr)
+library(cowplot)
+library(ggpubr)
+library(purrr)
+
+# Load required library
+library(Biostrings)
+
+# Function to read a FASTA file and convert the protein sequence to a dataframe
+convert_protein_fasta_to_dataframe <- function(fasta_file) {
+  # Read the FASTA file
+  fasta <- readAAStringSet(fasta_file)
+  
+  # Extract the sequence as a string
+  sequence <- as.character(fasta[[1]])
+  
+  # Split the sequence into individual amino acids
+  amino_acids <- strsplit(sequence, split = "")[[1]]
+  
+  # Convert the amino acids into a dataframe
+  df <- data.frame(position = 1:length(amino_acids), amino_acid = amino_acids, stringsAsFactors = FALSE)
+  
+  return(df)
+}
+
+# Example usage
+# Replace "your_protein_sequence.fasta" with the path to your FASTA file
+fasta_file <- "/Users/beallma/Documents/GitHub/NLP_viral_escape/data/cov/dadonaite/BA.1/BA1.fasta"
+wt_mutations <- convert_protein_fasta_to_dataframe(fasta_file)
+# View the dataframe
+print(wt_mutations)
+create_locus_map <- function(fasta_file, reference_sequence_name) {
+  # Read the FASTA file
+  alignment <- readAAStringSet(fasta_file)
+  
+  # Ensure the reference sequence exists
+  if (!reference_sequence_name %in% names(alignment)) {
+    stop("Reference sequence not found in the FASTA file.")
+  }
+  
+  # Extract sequences
+  ref_seq <- alignment[[reference_sequence_name]]
+  other_seq_name <- setdiff(names(alignment), reference_sequence_name)
+  
+  if (length(other_seq_name) != 1) {
+    stop("The alignment must contain exactly two sequences.")
+  }
+  
+  other_seq <- alignment[[other_seq_name]]
+  
+  # Initialize variables for mapping
+  ref_pos <- 0
+  other_pos <- 0
+  result <- data.frame(ReferenceAA = character(), ReferenceLocus = integer(),
+                       OtherLocus = integer(), stringsAsFactors = FALSE)
+  
+  # Iterate through both sequences
+  for (i in seq_along(ref_seq)) {
+    ref_aa <- as.character(ref_seq[i])
+    other_aa <- as.character(other_seq[i])
+    
+    # Update loci if the character is not a gap
+    if (ref_aa != "-") {
+      ref_pos <- ref_pos + 1
+    }
+    if (other_aa != "-") {
+      other_pos <- other_pos + 1
+    }
+    
+    # Store mapping if the reference has a valid amino acid
+    if (ref_aa != "-") {
+      result <- rbind(result, data.frame(ReferenceAA = ref_aa,
+                                         ReferenceLocus = ref_pos,
+                                         OtherLocus = ifelse(other_aa != "-", other_pos, NA)))
+    }
+  }
+  
+  return(result)
+}
+fasta_file <- "/Users/beallma/Documents/GitHub/NLP_viral_escape/data/cov/dadonaite/BA.1/BA1_alignment.fasta"
+my_locus_map = create_locus_map(fasta_file = fasta_file, 
+                                reference_sequence_name = "BA.1_Dadonaite")
+my_locus_map = my_locus_map %>%
+  mutate(Dado_AA_BA1_loc = paste0(ReferenceAA, OtherLocus),
+         Dado_AA_Dado_loc = paste0(ReferenceAA, ReferenceLocus))
+my_locus_map
+```
+## Basic Functions
+
+```{r}
+three_to_single <- function(three_letter) {
+  aa_map <- list(
+    ALA = "A",
+    ARG = "R",
+    ASN = "N",
+    ASP = "D",
+    CYS = "C",
+    GLN = "Q",
+    GLU = "E",
+    GLY = "G",
+    HIS = "H",
+    ILE = "I",
+    LEU = "L",
+    LYS = "K",
+    MET = "M",
+    PHE = "F",
+    PRO = "P",
+    SER = "S",
+    THR = "T",
+    TRP = "W",
+    TYR = "Y",
+    VAL = "V"
+    # You can add more amino acids if needed
+  )
+  
+  return(aa_map[[three_letter]])
+}
+
+aa_alphabet = c("A","R","N","D","C",
+                "Q","E","G","H","I",
+                "L","K","M","F","P",
+                "S","T","W","Y","V")
+
+get_seqs = function(file_name){
+  fasta_file <- file_name
+  
+  # Read the lines of the FASTA file
+  fasta_lines <- readLines(fasta_file)
+  
+  # Extract the sequence information
+  sequence_info <- grep("^>", fasta_lines, value = TRUE)
+sequence_name <- gsub(">", "", sequence_info)
+sequence <- sapply(seq_along(sequence_info), function(i) {
+  start <- grep(sequence_info[i], fasta_lines)[1] + 1
+  end <- ifelse(i == length(sequence_info), length(fasta_lines), grep(sequence_info[i + 1], fasta_lines)[1] - 1)
+  paste(fasta_lines[start:end], collapse = "")
+}, simplify = TRUE)
+
+# Create a named vector with one entry
+fasta_data <- setNames(sequence, sequence_name)
+  return(fasta_data)
+}
+
+zscore = function(df = c()){(df-mean(df))/sd(df)}
+```
+
+# Escape Scores
+
+```{r cars}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/")
+fname = "cov/dadonaite/BA.1/CC9.104_avg.csv"
+df_CC9.104 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  mutate(antibody = "CC9.104")
+
+fname = "cov/dadonaite/BA.1/CC67.105_avg.csv"
+df_CC67.105 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  mutate(antibody = "CC67.105")
+
+fname = "cov/dadonaite/BA.1/LyCoV-1404_avg.csv"
+df_LyCoV = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  mutate(antibody = "LyCoV_1404")
+
+fname = "cov/dadonaite/BA.1/NTD_5-7_avg.csv"
+df_NTD57 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  mutate(antibody = "NTD_5.7")
+
+names(df_CC9.104)
+head(df_CC9.104)
+
+all_esc_scores = df_CC9.104 %>% 
+  full_join(df_CC67.105) %>% 
+  full_join(df_LyCoV) %>%
+  full_join(df_NTD57) %>% 
+  select(c(epitope, site, wildtype, mutant, mutation, escape_median, escape_std, antibody)) %>%
+  mutate(escape = case_when(
+    (is.na(escape_std)) & (escape_median > 0) ~ "escape",
+    (is.na(escape_std)) & (escape_median < 0) ~ "non-escape",
+    (abs(escape_median) - (2*escape_std) > 0) & (escape_median > 0)   ~ "escape",
+    (abs(escape_median) - (2*escape_std) > 0) & (escape_median < 0)   ~ "non-escape",
+    TRUE ~ "non-escape"
+  )) %>%
+  nest(data = -antibody) %>%
+  mutate(data = map(data, ~ .x %>% mutate(ranked_score = rank(escape_median))),
+         plot = map2(data, antibody, ~ ggplot(.x, aes(x = ranked_score, y = escape_median)) +
+                  geom_point() +
+                  labs(title = paste("Antibody:", .y, 
+                                     nrow(.x %>% subset(escape == "escape")),
+                                     "escape mutations"), 
+                       x = "Rank", y = "Escape Median"))
+         )
+
+head(all_esc_scores)
+tail(all_esc_scores)
+all_esc_scores$plot
+esc_scores = df_CC9.104 %>% 
+  full_join(df_CC67.105) %>% 
+  full_join(df_LyCoV) %>%
+  full_join(df_NTD57) %>%
+  dplyr::rename("ID" = "mutation") %>%
+  mutate(escape = case_when(
+    (is.na(escape_std)) & (escape_median > 0) ~ "escape",
+    (is.na(escape_std)) & (escape_median < 0) ~ "non-escape",
+    (abs(escape_median) - (2*escape_std) > 0) & (escape_median > 0)   ~ "escape",
+    (abs(escape_median) - (2*escape_std) > 0) & (escape_median < 0)   ~ "non-escape",
+    TRUE ~ "non-escape"
+  ))
+esc_scores
+
+esc_overall = esc_scores %>% 
+  subset((mutant != "*") | (mutant != "-")) %>%
+  select(ID, antibody, escape) %>%
+  group_by(ID) %>%
+  summarise(
+    escape_status = if_else(any(escape == "escape"), "escape", "non-escape"),
+    antibodies = paste(unique(antibody), collapse = ", ")
+  ) %>%
+  ungroup()
+esc_overall
+```
+
+# Functional Scores
+```{r}
+
+BA1_thresh = -1.38 # from the literature
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/")
+fname = "cov/dadonaite/BA.1/muteffects_observed.csv"
+func_scores = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")%>%
+  mutate(ID = paste0(wildtype, sequential_site, mutant),
+         wt = case_when(
+           is.na(times_seen) ~ TRUE,
+           TRUE ~ FALSE
+         ),
+         viable = case_when(
+           (effect - (2*effect_std) >= BA1_thresh) & (effect >= BA1_thresh)   ~ "viable",
+           (effect + (2*effect_std) >= BA1_thresh) & (effect <= BA1_thresh)  ~ "viable",
+           TRUE ~ "not viable"
+         )) %>% 
+  select(c(-Lib.1.effect, -Lib.2.effect, -Lib.3.effect, -phenotype, -n_libraries, -times_seen))
+func_scores
+```
+
+```{r}
+# now let us include mutations that were not tested at all
+all_sites_escape_viable = 
+  func_scores %>% subset((mutant != "*") || mutant != "-") %>%
+  select(c("effect", "ID", "wt","reference_site", "viable", "sequential_site")) %>%
+  left_join(esc_overall, by = "ID") %>% 
+  mutate(site = as.integer(ifelse(is.na(ID), 
+                                  substr(ID, 1,nchar(ID)-1), sequential_site))) %>%
+  mutate(wt = ifelse(is.na(wt), 
+                     sapply(site, function(x) wt_mutations$mutations[x]),
+                     wt)) %>%
+  mutate(ID = ifelse(is.na(ID),
+                     paste0(substr(wt, nchar(wt), nchar(wt)), mutations),
+                     ID)) %>%
+  mutate(dadonaite_esc = ifelse(is.na(escape_status), "not tested", escape_status)) %>%
+  select(-escape_status)
+all_sites_escape_viable
+all_sites_escape_viable %>% subset(is.na(viable)) #empty
+all_sites_escape_viable %>% subset((viable == "not viable") & dadonaite_esc == "escape") # 144
+all_sites_escape_viable %>% subset((viable == "not viable") & (dadonaite_esc == "non-escape")) # 565
+
+
+```
+
+# Hie Bespoke Model
+Read in and process the Hie pretrained bespoke model data
+
+```{r}
+fname = "/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization/cov/cov_BA1_screen_wc03.log"
+
+df_Hie_dado = read.delim(file = fname, header = TRUE, sep="",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+df_Hie_dado = df_Hie_dado %>% dplyr::rename("Semantic.change_Hie" = "Semantic.change",
+               "Grammaticality_Hie_logit" = "Grammaticality") %>%
+  select(-Mutations, -Sequence)
+
+df_Hie_dado
+```
+
+
+#ESM-2 data
+
+```{r}
+fname = "/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization/cov/cov_BA1_ESM2.log"
+
+df_ESM2_dado = read.delim(file = fname, header = TRUE, sep="",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+df_ESM2_dado = df_ESM2_dado %>% dplyr::rename("Semantic.change_ESM2" = "Semantic.change",
+                "Grammaticality_ESM2_unmasked" = "Grammaticality") %>% 
+  select(-Mutations, -Sequence)
+#high grammar means more like the original sequence, so we want to invert^ this to match semantic change
+df_ESM2_dado
+```
+
+#ESM-2 masked data
+
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/language_models/results")
+
+fname = "cov/logits_BA1_ESM2_650M_masked.csv"
+df_ESM2_dado_masked = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+df_ESM2_dado_masked <- df_ESM2_dado_masked %>%
+  pivot_longer(cols = -X,
+               names_to = "Amino_Acid",
+               values_to = "prob_ESM2_masked")
+
+wt_mutations = wt_mutations %>% 
+  mutate(AA = paste0(amino_acid, position))
+
+df_ESM2_dado_masked <- df_ESM2_dado_masked %>%
+  mutate(partial_id = paste0(X, Amino_Acid))
+
+df_ESM2_dado_masked <- df_ESM2_dado_masked %>%
+  left_join(wt_mutations, by = 
+               c("X" = "position")) %>%
+  mutate(
+    ID = paste0(AA, Amino_Acid),
+    mutant = case_when(substr(ID, nchar(ID), nchar(ID)) == substring(ID, 1, 1) ~ "wt",
+                   TRUE ~ "mutant")) %>%
+  select(-X, -Amino_Acid, -partial_id, -AA)
+df_ESM2_dado_masked
+```
+
+Read in and process the 
+#MutComputeX data
+
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/structural_models/results")
+
+fname = "cov/BA1-af2-trunc_mutcomputex.csv"
+df_mutcomp = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+names(df_mutcomp)
+head(df_mutcomp)
+df_mutcomp <- df_mutcomp %>%
+  rename(prAA = "mut_pred",
+         pred_prob = "mut_pred_prob") %>%
+  pivot_longer(cols = starts_with("pr"),
+               names_to = "Amino_Acid",
+               values_to = "prob_MutCompX") %>%
+  select(chain_id, pos, wtAA, mut_pred, Amino_Acid, prob_MutCompX) %>%
+  mutate(
+    Amino_Acid = gsub("pr", "", Amino_Acid),
+    Amino_Acid = sapply(Amino_Acid, three_to_single),
+    wtAA = sapply(wtAA, three_to_single),
+    mut_pred = sapply(mut_pred, three_to_single),
+    Mutations = paste(wtAA, pos, Amino_Acid, sep = "")
+  ) %>% 
+  filter(chain_id == "A") %>%
+  select(Mutations,prob_MutCompX)
+#high probability means more like the original sequence, so we want to invert^ this to match semantic change
+df_mutcomp
+```
+
+Read in and process the 
+#MutRank data
+
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/structural_models/results")
+
+fname = "cov/BA1-af2-trunc_mutrank.csv"
+df_mutrank = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+names(df_mutrank)
+head(df_mutrank)
+df_mutrank <- df_mutrank %>%
+  rename(pred_AA = "mut_pred",
+         pred_prob = "mut_pred_prob") %>%
+  pivot_longer(cols = starts_with("mean"),
+               names_to = "Amino_Acid",
+               values_to = "prob_MutRank") %>%
+  select(chain_id, res_seq_num, wt_AA, mut_pred, Amino_Acid, prob_MutRank) %>%
+  mutate(
+    Amino_Acid = gsub("mean_", "", Amino_Acid),
+    Amino_Acid = sapply(Amino_Acid, three_to_single),
+    wt_AA = sapply(wt_AA, three_to_single),
+    mut_pred = sapply(mut_pred, three_to_single),
+    Mutations = paste(wt_AA, res_seq_num, Amino_Acid, sep = "")
+  ) %>% 
+  filter(chain_id == "A") %>%
+  select(Mutations,prob_MutRank)
+#high probability means more like the original sequence, so we want to invert^ this to match semantic change
+df_mutrank
+```
+
+Read in and process the 
+#StabilityOracle data
+
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/structural_models/results")
+fname = "cov/BA1-af2-trunc_stability-oracle.csv"
+
+df_stab_ora = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+df_stab_ora <- df_stab_ora %>%
+  pivot_longer(cols = starts_with("mean_"),
+               names_to = "Amino_Acid",
+               values_to = "ddG_Stab_Ora") %>%
+  select(chain_id, res_seq_num, wt_AA, pred_AA, Amino_Acid, ddG_Stab_Ora) %>%
+  mutate(
+    Amino_Acid = gsub("mean_", "", Amino_Acid),
+    Amino_Acid = sapply(Amino_Acid, three_to_single),
+    wt_AA = sapply(wt_AA, three_to_single),
+    pred_AA = sapply(pred_AA, three_to_single),
+    Mutations = paste(wt_AA, res_seq_num, Amino_Acid, sep = "")
+  ) %>% 
+  filter(chain_id == "A") %>%
+ select(Mutations,ddG_Stab_Ora)
+df_stab_ora
+```
+
+# EVEscape
+
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/cov/evescape")
+#fname = "full_BA1_evescape.csv"
+fname = "Omicron(BA.1)_single_mutation_predictions.csv"
+
+df_eves = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+result_string <- character(max(df_eves$pos))
+
+# Place the letters in the appropriate positions
+result_string[df_eves$pos] <- df_eves$wt
+
+# Combine the characters into a single string
+final_string <- paste0(result_string, collapse = "")
+
+# Print the result
+print(final_string)
+
+df_eves = df_eves %>%
+  #arrange(i) %>%
+  mutate(ID = paste0(wt, pos, mut),
+         wt_BA1 = paste0(wt,pos)) %>%
+  select(ID, EVEscape, fitness_evol_indices, wt_BA1,mut) %>%
+  rename("fitness_evol_indices" = "eve") %>%
+  rename("EVEscape" = "evescape") %>%
+  left_join(my_locus_map, by = c("wt_BA1" = "Dado_AA_BA1_loc")) %>%
+  mutate(Dado_loc_BA1_mut = paste0(Dado_AA_Dado_loc, mut)) %>%
+  select(c(ID, wt_BA1, Dado_loc_BA1_mut, eve, evescape))
+  
+  #select(mutations, EVEscape)
+df_eves 
+
+# df_eves$ID[!(df_eves$ID %in% df_stab_ora$Mutations)]
+# df_eves$ID[!(df_eves$ID %in% df_ESM2_dado_masked$ID)]
+# tail(df_eves)
+# tail(df_stab_ora)
+# tail(df_ESM2_dado_masked)
+```
+
+# Combine all datastreams into one dataframe
+
+```{r}
+
+all_sites_escape_viable 
+ # contains the grammaticality and semantic change measures from the Hie model
+           # large gramm -> closer to wt -> large rank
+           # small sem change -> close to wt -> supposed less likely escape -> smaller rank
+df_stab_ora # ddG from stability Oracle. More negative -> more stable -> smaller rank; more positive -> less stable -> larger rank
+df_mutcomp # large probability -> more stable -> larger rank
+df_mutrank # large log odds --> more stable --> larger rank
+df_ESM2_dado # probability from masked ESM model -> larger probability -> more grammatical -> larger rank
+df_ESM2_dado_masked # semantic change and grammar using the ESM model in an unmasked framework
+
+comb_data = df_Hie_dado  %>% 
+  left_join(all_sites_escape_viable, by = c('ID' = 'ID')) %>%
+  left_join(df_ESM2_dado, by = c('ID' = 'ID')) %>%
+  left_join(df_ESM2_dado_masked, by = c('ID' = 'ID')) %>%
+  left_join(df_stab_ora, by = c('ID' = 'Mutations')) %>%
+  left_join(df_mutcomp, by = c('ID' = 'Mutations')) %>%
+  left_join(df_mutrank, by = c('ID' = 'Mutations')) %>%
+  left_join(df_eves, by = c("ID" = "Dado_loc_BA1_mut")) %>%
+  replace_na(list(dadonaite_esc = "not tested", viable = "not tested"))
+
+my_measures = colnames(comb_data %>% 
+                         select(-c(ID, reference_site, antibodies,
+                                wt,sequential_site, effect,
+                                mutant, dadonaite_esc, viable, amino_acid, site,
+                                ID.y, wt_BA1))
+                       )
+my_measures
+comb_data
+
+rev_rank_measures = c("ddG_Stab_Ora")
+
+comb_data_norm = comb_data %>% 
+  mutate_at(my_measures, function(x) rank(x, na.last = "keep")) %>%
+  mutate_at(rev_rank_measures, ~max(rank(., na.last = "keep"), na.rm=T) + 1 - rank(.,na.last = "keep") ) %>%
+  mutate_at(my_measures, function(x) x/max(x, na.rm = TRUE))
+
+comb_data_norm
+
+mut_by_site = c("ddG_Stab_Ora", "prob_MutCompX", "prob_ESM2_masked", "prob_MutRank")
+
+comb_data_mut_by_site = comb_data %>%
+  group_by(site) %>%
+  mutate_at(mut_by_site,
+            function(x) rank(x, na.last = "keep")) %>%
+  mutate_at(mut_by_site, function(x) rank(x, na.last = "keep")) %>%
+  select(ID, mutant, site, ddG_Stab_Ora, prob_MutCompX, prob_ESM2_masked, evescape)
+  
+comb_data_long = comb_data_norm %>% 
+  select(-effect, -mutant, -wt, -reference_site, -site, -sequential_site, -antibodies, -amino_acid) %>%
+  pivot_longer(cols = my_measures ,
+               names_to = "Measure",
+               values_to = "rank") %>%
+  mutate(Measure = 
+           case_when(
+             Measure == "ddG_Stab_Ora" ~ "Stability Oracle",
+             Measure == "prob_MutCompX" ~ "MutComputeX",
+             Measure == "prob_MutRank" ~ "MutRank",
+             Measure == "prob_ESM2_masked" ~ "Grammaticality (ESM2, masked)",
+             Measure == "Semantic.change_Hie" ~ "Semantic change (Hie)",
+             Measure == "Grammaticality_Hie_logit" ~ "Grammaticality (Hie)",
+             Measure == "Semantic.change_ESM2" ~ "Semantic change (ESM2)",
+             Measure == "Grammaticality_ESM2_unmasked" ~ "Grammaticality (ESM2, unmasked)",
+             Measure == "evescape" ~ "EVEscape",
+             Measure == "eve" ~ "EVE"
+             )
+         )
+comb_data_long
+
+```
+
+# Pie Chart
+```{r}
+library(ggforce)
+comb_esc_via = all_sites_escape_viable %>%
+  full_join(df_Hie_dado, by ="ID") %>% # to include all possible mutations
+  replace_na(list(dadonaite_esc = "not tested", viable = "not tested")) %>% 
+  mutate(dadonaite_esc = ifelse((viable == "not viable") & 
+                                  (dadonaite_esc == "not tested"), 
+                                "not viable", dadonaite_esc),
+         dadonaite_esc = ifelse((viable == "viable") & 
+                                  (dadonaite_esc == "not tested"), 
+                                "viable", dadonaite_esc)
+         )
+count_comb_cov = comb_esc_via %>% group_by(dadonaite_esc) %>%
+  summarize(
+    count = n()
+  )
+
+
+mut_order = c("escape", "non-escape", "viable", 
+              "not viable","not tested")
+pie_data_cov <- count_comb_cov %>%
+  arrange(match(dadonaite_esc, mut_order)) %>% # sort so pie slices end up sorted
+  mutate(
+    end_angle = 2*pi*cumsum(count)/sum(count),   # ending angle for each pie slice
+    start_angle = lag(end_angle, default = 0),   # starting angle for each pie slice
+    mid_angle = 0.5*(start_angle + end_angle),   # middle of each pie slice, for text labels
+    # horizontal and vertical justifications for outer labels
+    hjust = ifelse(mid_angle > pi, 1, 0),
+    vjust = ifelse(mid_angle < pi/2 | mid_angle > 3*pi/2, 0, 1)
+  )
+pie_data_cov
+
+pie_data_cov$hjust[1] = 1
+pie_data_cov$vjust[4] = 1
+pie_data_cov$vjust[3] = 0
+pie_data_cov$mid_angle[3] = 1.1645
+pie_data_cov$mid_angle[5] = (2*pi) - pie_data_cov$mid_angle[4]
+pie_data_cov$vjust[5] = 1
+
+
+pie_data_cov
+
+cov_esc_pie = ggplot(pie_data_cov) +
+    aes(
+      x0 = 0, y0 = 0,
+      r0 = 0.4, r = 1,
+      amount = count,
+      start = start_angle, end = end_angle,
+      fill = dadonaite_esc
+    ) +
+  geom_arc_bar(alpha = 0.7) +
+  geom_text(
+    aes(x = 1.1 * sin(mid_angle), 
+        y = 1.1 * cos(mid_angle), 
+        label = count,
+        hjust = hjust,
+        vjust = vjust)#vjust)
+  ) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100",
+                                 "viable" = "#399c52",
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5"),
+                    name = "spike\nmutation type",
+                    breaks = mut_order) +
+  coord_fixed() +
+  xlim(-1, 1.3) +
+  ylim(-1.1, 1.4) +
+  theme_void() +
+  theme(
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+    legend.key=element_rect(color="white"),
+    legend.position = "none"
+  ) + 
+  geom_segment(aes(
+      x = 1 * sin(mid_angle), 
+      xend = 1.1 * sin(mid_angle),
+      y = 1 * cos(mid_angle), 
+      yend = 1.1 * cos(mid_angle)
+    )) + 
+  annotate("text", x = 0, y = 0, label = "BA.1", size = 8, fontface = "bold")
+cov_esc_pie
+
+fname = paste0('cov_Dadonaite_BA1_DMS_noindel_piechart_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = cov_esc_pie,
+  width = 4, height = 3.5, units = "in"
+)
+
+mut_order = c("escape", "non-escape", "viable", 
+              "not viable","not tested")
+#layer_data(plot = cov_esc_pie)
+```
+
+# Scatter w/ Marginal
+```{r}
+library("ggExtra")
+
+comb_esc_via = comb_esc_via %>% 
+  mutate(dadonaite_esc = 
+           factor(dadonaite_esc, levels = rev(mut_order))) %>%
+  arrange(dadonaite_esc)
+
+#comb_esc_via$dadonaite_esc <- factor(comb_esc_via$dadonaite_esc, levels = (mut_order))
+p_cov_scatter= ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_esc_via %>% filter(dadonaite_esc == "not tested"), 
+              aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie, 
+                 color = dadonaite_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_esc_via %>% filter(dadonaite_esc == "not viable"), 
+              aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie, 
+                 color = dadonaite_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_esc_via %>% filter(dadonaite_esc == "non-escape"), 
+              aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie, 
+                 color = dadonaite_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_esc_via %>% filter(dadonaite_esc == "escape"), 
+              aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie, 
+                 color = dadonaite_esc),
+             alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  # geom_point(data = subset(comb_data, Baum_esc == "escape"), 
+  #            aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie),
+  #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  ylab("Semantic Change") +
+  xlab("Grammaticality")
+
+p_cov_scatter_ungrouped= ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_esc_via %>% subset(dadonaite_esc != "viable"), 
+              aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie, 
+                 color = dadonaite_esc),
+             alpha = 0.5, size = 1) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  # geom_point(data = subset(comb_data, Baum_esc == "escape"), 
+  #            aes(x = Grammaticality_Hie_logit, y = Semantic.change_Hie),
+  #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  ylab("Semantic Change") +
+  xlab("Grammaticality")
+p_cov_scatter_ungrouped
+
+p_cov_scatter_ungrouped = ggMarginal(p_cov_scatter_ungrouped, 
+                                     groupColour = TRUE, groupFill = TRUE,
+                                     alpha = 0)
+fname = paste0('cov_hie_scatter_escape_BA1_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = p_cov_scatter_ungrouped,
+  width = 3.5, height = 3.5, units = "in"
+)
+```
+
+#Pie with Scatter
+```{r}
+library(cowplot)
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+#renv::init()
+```
+
+```{r}
+#mywd = "/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization"
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+cov_esc_pie
+p_cov_scatter_ungrouped
+
+prow <- plot_grid(
+  p_cov_scatter_ungrouped, cov_esc_pie + theme(legend.position="none"),
+  align = 'h',
+  labels = c("A", "B"),
+  hjust = -1,
+  nrow = 1,
+  rel_widths = c(1, 1)
+)
+prow
+
+legend_b <- get_legend(
+  cov_esc_pie + 
+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom")
+)
+scatter_pie = plot_grid(prow, legend_b, 
+          ncol = 1,
+          rel_heights = c(1, .15))
+scatter_pie
+fname = paste0('BA1_scatter_escape_piechart_', Sys.Date(), '.png')
+ggsave(
+  file = fname,
+  plot = scatter_pie + theme(plot.background = element_rect(fill = "white", linetype = "blank"),
+                             panel.border = element_blank()),
+  width = 5.3, height = 3.8, units = "in"
+)
+```
+# Boxplots viability
+
+Now I want to recreate the cov bar charts. The issue is choosing which measure of viability to use
+
+Let's start with the coloring the plot by viability
+
+prepare the data
+
+```{r}
+comb_data_norm
+comb_data_long
+
+comb_data_long_gramm = comb_data_long
+
+x_order = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVE",
+            "Semantic change (Hie)",
+            "Semantic change (ESM2)"
+         ))
+
+nested_comb_data_long_esc_eff_tol = comb_data_long %>% 
+  subset(viable != "not tested") %>% 
+  pivot_wider(names_from = "viable", values_from = "rank") |>
+  arrange(factor(Measure, levels = x_order))
+
+fname = paste0('BA1_boxplots_viability_tested_', Sys.Date(), '.png')
+
+nested_comb_data_long_esc_temp = nested_comb_data_long_esc_eff_tol %>% nest(data = -Measure)
+
+nested_comb_data_long_esc_eff_tol
+```
+
+
+```{r}
+
+data_stats_gramm <- nested_comb_data_long_esc_eff_tol |>
+  nest(data = -Measure) %>%
+  mutate(
+    via_non_via = map(data, ~broom::tidy(wilcox.test(.x$viable, .x$`not viable`)))
+    
+  ) |>
+  pivot_longer(
+    cols = c(via_non_via),
+    names_to = "test",
+    values_to = "stats"
+  ) |>
+  mutate(
+    column1 = case_when(
+      test == "via_non_via" ~ "viable"
+    ),
+    column2 = case_when(
+      test == "via_non_via" ~ "not viable"
+    )
+  ) |>
+  unnest_wider(stats) |>
+  select(Measure, column1, column2, p.value)
+
+y_delta = 0#.25 # distance between adjacent bloxplots (.8/number of boxplots)
+x_delta = 0#.185 # distance between line segments
+data_comparisons_gramm <- data_stats_gramm |>
+  mutate(
+    # apply overall false-discovery rate correction
+    p.value = p.adjust(p.value, method = "fdr"),
+    # set stars
+    label = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01 ~ "**",
+      p.value < 0.05 ~ "*",
+      TRUE ~ "NS"
+    ),
+    # offset to correct for stars not being vertically centered
+    label_off = case_when(
+      label == "NS" ~ 0,
+      TRUE ~ -.04,
+    ),
+    # calculate x and y offsets for line segments
+    yoff1 = case_when(
+      column1 == "viable" ~ y_delta,
+      column1 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    yoff2 = case_when(
+      column2 == "viable" ~ y_delta,
+      column2 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    xoff = case_when(
+      column1 == "viable" & column2 == "not viable" ~ 0,
+      column1 == "not viable" & column2 == "viable" ~ x_delta,
+      TRUE ~ 2 * x_delta
+    )
+  )
+
+data_comparisons_via_gramm = data_comparisons_gramm %>% 
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+data_comparisons_via_sem = data_comparisons_gramm %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+nested_comb_data_long_via_gramm = nested_comb_data_long_esc_temp %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+nested_comb_data_long_via_sem = nested_comb_data_long_esc_temp %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+custom_order_via = c("viable", "not viable")
+
+x_order_gramm = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVE"
+         ))
+
+nested_comb_data_long_esc_temp
+nested_comb_data_long_esc_eff_tol
+
+via_gramm_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, viable, `not viable`)) %>%#select(-c(ID_HXB2,ID, any_ab_ESC, res_seq_num, ESC_via_thresh0005)) %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% 
+  arrange(factor(Measure, levels = (x_order_gramm))) %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% 
+  drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_gramm), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("viable" = "#399c52",
+                                 "not viable" = '#AF596E' #"#cd6a83", 
+                                 ),
+                      breaks = custom_order_via,
+                      name = "spike\nmutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_gramm)) + yoff2
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.02, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Grammaticality (ESM2, unmasked)" = "Grammaticality\n(ESM2, unmasked)",
+                              "Grammaticality (ESM2, masked)" = "Grammaticality\n(ESM2, masked)",
+                              "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  # scale_y_discrete(labels = c("Grammaticality (ESM2)" = "Grammaticality\n(ESM2, unmasked)",
+  #                             "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  theme_classic() + ylab("") + theme(legend.position = "top")
+via_gramm_plot
+data_stats_gramm
+data_comparisons_via_gramm
+layer_data(via_gramm_plot)
+```
+
+Semantic change subplot for viability
+
+```{r}
+x_order_sem = rev(c("Semantic change (Hie)", "Semantic change (ESM2)", "EVEscape"))
+
+via_sem_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, viable, `not viable`)) %>% 
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"
+                        )) %>% 
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |> 
+  arrange(factor(Measure, levels = (x_order_sem))) %>%
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_sem), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("viable" = "#399c52",
+                                 "not viable" = '#AF596E', #"#cd6a83", 
+                                 "not tested" = "#C5C5C5"),
+                      breaks = custom_order_via,
+                      name = "spike\nmutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_sem)) + yoff2
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.04, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")
+                   ) +
+  theme_classic() + ylab("") + theme(legend.position = "none")
+via_sem_plot
+```
+
+
+```{r}
+via_sem_plot_new_labs = via_sem_plot + 
+  theme(legend.position="none")+ # plot.margin = margin(r = 0, l = 0, t= 0, b = 0.1, unit = "inches"))
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")) + 
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_sem_plot_new_labs
+
+via_gramm_plot_new = via_gramm_plot + 
+  theme(legend.position="none", plot.margin = margin(l = 0,t = 0.1, b = 0.1, r = 0.1, unit = "inches"))+#unit(c(0, 0, 0, 0), "inches"))  + 
+  #xlim(-.02,2.5) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_gramm_plot_new
+
+legend_b <- get_legend(
+  via_gramm_plot_new + theme(legend.position="right",
+                             legend.key.width = unit(.6, "in"),
+                             legend.key.height = unit(.1, "in")) +
+    guides(color = guide_legend(nrow = 3,
+                                title = "spike\nmutation type"))
+)
+
+aligned <- align_plots(via_gramm_plot_new+ xlab("relative rank"), 
+                       via_sem_plot_new_labs+ xlab("relative rank"), 
+                       align = 'h', axis = 'l')
+
+sem_col <- plot_grid(
+  aligned[[2]],#via_sem_plot_new_labs+ xlab("relative rank"),
+  legend_b,
+  NULL,
+  labels = c("", "", ""),
+  nrow = 3,
+  rel_heights = c(1, .5, .35)
+)
+sem_col
+
+gram_col = plot_grid(
+  aligned[[1]] ,
+  NULL,
+  labels = c("", ""),
+  nrow = 2,
+  rel_heights = c(1, .05)
+)
+
+via_all_measures = plot_grid(
+  gram_col,#aligned[[1]], 
+  #NULL,
+  sem_col, 
+  ncol = 2,
+  align = 'h',
+  labels = c("A", "B"),
+  label_x = 0.05, label_y = 0.95,
+  hjust = -0.5, vjust = -0.5,
+  rel_widths = c(1, .75))
+
+via_all_measures
+
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+fname = paste0('BA1_boxplots_viability_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = via_all_measures + theme(plot.background = element_rect(fill = "white", linetype = "blank"),
+                             panel.border = element_blank()),
+  width = 6.5, height = 5.3, units = "in"
+)
+```
+
+# Boxplots Escape
+
+```{r}
+nested_comb_data_long_esc_eff_tol = comb_data_long %>% 
+  subset(dadonaite_esc != "not tested") %>% 
+  pivot_wider(names_from = "dadonaite_esc", values_from = "rank") |>
+  arrange(factor(Measure, levels = x_order))
+
+nested_comb_data_long_esc_temp = nested_comb_data_long_esc_eff_tol %>% nest(data = -Measure)
+nested_comb_data_long_esc_eff_tol
+```
+
+
+```{r}
+
+data_stats_gramm <- nested_comb_data_long_esc_eff_tol |>
+  nest(data = -Measure) %>%
+  mutate(
+    via_non_via = map(data, ~broom::tidy(wilcox.test(.x$escape, .x$`non-escape`)))
+    
+  ) |>
+  pivot_longer(
+    cols = c(via_non_via),
+    names_to = "test",
+    values_to = "stats"
+  ) |>
+  mutate(
+    column1 = case_when(
+      test == "via_non_via" ~ "escape"
+    ),
+    column2 = case_when(
+      test == "via_non_via" ~ "non-escape"
+    )
+  ) |>
+  unnest_wider(stats) |>
+  select(Measure, column1, column2, p.value)
+
+y_delta = 0#.25 # distance between adjacent bloxplots (.8/number of boxplots)
+x_delta = 0#.185 # distance between line segments
+data_comparisons_gramm <- data_stats_gramm |>
+  mutate(
+    # apply overall false-discovery rate correction
+    p.value = p.adjust(p.value, method = "fdr"),
+    # set stars
+    label = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01 ~ "**",
+      p.value < 0.05 ~ "*",
+      TRUE ~ "NS"
+    ),
+    # offset to correct for stars not being vertically centered
+    label_off = case_when(
+      label == "NS" ~ 0,
+      TRUE ~ -.04,
+    ),
+    # calculate x and y offsets for line segments
+    yoff1 = case_when(
+      column1 == "viable" ~ y_delta,
+      column1 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    yoff2 = case_when(
+      column2 == "viable" ~ y_delta,
+      column2 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    xoff = case_when(
+      column1 == "escape" & column2 == "non-escape" ~ 0,
+      column1 == "non-escape" & column2 == "escape" ~ x_delta,
+      TRUE ~ 2 * x_delta
+    )
+  )
+
+data_comparisons_via_gramm = data_comparisons_gramm %>% 
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+data_comparisons_via_sem = data_comparisons_gramm %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+         "EVEscape"))
+
+nested_comb_data_long_via_gramm = nested_comb_data_long_esc_temp %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+nested_comb_data_long_via_sem = nested_comb_data_long_esc_temp %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)"))
+
+custom_order_via = c("escape", "non-escape")
+
+x_order_gramm = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVE"
+         ))
+
+nested_comb_data_long_esc_temp
+nested_comb_data_long_esc_eff_tol
+
+via_gramm_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, escape, `non-escape`)) %>%#select(-c(ID_HXB2,ID, any_ab_ESC, res_seq_num, ESC_via_thresh0005)) %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% 
+  arrange(factor(Measure, levels = (x_order_gramm))) %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% 
+  drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_gramm), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100" 
+                                 ),
+                      breaks = custom_order_via,
+                      name = "spike\nmutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_gramm)) + yoff2
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.02, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Grammaticality (ESM2, unmasked)" = "Grammaticality\n(ESM2, unmasked)",
+                              "Grammaticality (ESM2, masked)" = "Grammaticality\n(ESM2, masked)",
+                              "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  # scale_y_discrete(labels = c("Grammaticality (ESM2)" = "Grammaticality\n(ESM2, unmasked)",
+  #                             "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  theme_classic() + ylab("") + theme(legend.position = "top")
+via_gramm_plot
+data_stats_gramm
+data_comparisons_via_gramm
+layer_data(via_gramm_plot)
+```
+
+Semantic change subplot for escape
+
+```{r}
+x_order_sem = rev(c("Semantic change (Hie)", "Semantic change (ESM2)", "EVEscape"))
+
+via_sem_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, escape, `non-escape`)) %>% 
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"
+                        )) %>% 
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |> 
+  arrange(factor(Measure, levels = (x_order_sem))) %>%
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_sem), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100"),
+                      breaks = custom_order_via,
+                      name = "HA mutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_sem)) + yoff2
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.04, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")
+                   ) +
+  theme_classic() + ylab("") + theme(legend.position = "none")
+via_sem_plot
+```
+
+```{r}
+via_sem_plot_new_labs = via_sem_plot + 
+  theme(legend.position="none")+ # plot.margin = margin(r = 0, l = 0, t= 0, b = 0.1, unit = "inches"))
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")) + 
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_sem_plot_new_labs
+
+via_gramm_plot_new = via_gramm_plot + 
+  theme(legend.position="none", plot.margin = margin(l = 0,t = 0.1, b = 0.1, r = 0.1, unit = "inches"))+#unit(c(0, 0, 0, 0), "inches"))  + 
+  #xlim(-.02,2.5) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_gramm_plot_new
+
+legend_b <- get_legend(
+  via_gramm_plot_new + theme(legend.position="right",
+                             legend.key.width = unit(.6, "in"),
+                             legend.key.height = unit(.1, "in")) +
+    guides(color = guide_legend(nrow = 3,
+                                title = "HA\nmutation type"))
+)
+
+aligned <- align_plots(via_gramm_plot_new+ xlab("relative rank"), 
+                       via_sem_plot_new_labs+ xlab("relative rank"), 
+                       align = 'h', axis = 'l')
+
+sem_col <- plot_grid(
+  aligned[[2]],#via_sem_plot_new_labs+ xlab("relative rank"),
+  legend_b,
+  NULL,
+  labels = c("", "", ""),
+  nrow = 3,
+  rel_heights = c(1, .5, .35)
+)
+sem_col
+
+gram_col = plot_grid(
+  aligned[[1]] ,
+  NULL,
+  labels = c("", ""),
+  nrow = 2,
+  rel_heights = c(1, .05)
+)
+
+via_all_measures = plot_grid(
+  sem_col,#aligned[[1]], 
+  #NULL,
+  gram_col, 
+  ncol = 2,
+  align = 'h',
+  labels = c("A", "B"),
+  label_x = 0.05, label_y = 0.95,
+  hjust = -0.5, vjust = -0.5,
+  rel_widths = c(.75, 1))
+
+via_all_measures
+
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+fname = paste0('BA1_boxplots_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = via_all_measures + theme(plot.background = element_rect(fill = "white", linetype = "blank"),
+                             panel.border = element_blank()),
+  width = 6.5, height = 5.3, units = "in"
+)
+```
+
+```{r}
+custom_order_esc = c("escape", "non-escape", "not tested")
+x_order = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVEscape",
+            "EVE",
+            "Semantic change (Hie)",
+            "Semantic change (ESM2)"
+         ))
+
+nested_comb_data_long_esc = comb_data_long %>% 
+  #subset(dadonaite_esc != "not tested") %>% 
+  subset(Measure != "FoldX") %>% 
+  subset(Measure != "PyRosetta") |>
+  pivot_wider(names_from = "dadonaite_esc", values_from = "rank") |>
+  select(-c(ID, viable))  %>% 
+  arrange(factor(Measure, levels = x_order))
+
+nested_comb_data_long_esc_temp = nested_comb_data_long_esc %>% nest(data = -Measure)
+
+data_stats_esc <- nested_comb_data_long_esc |>
+  nest(data = -Measure) |>
+  mutate(
+    esc_not_esc = map(data, ~broom::tidy(wilcox.test(.x$escape, .x$`non-escape`))),
+    esc_non_via = map(data, ~broom::tidy(wilcox.test(.x$escape, .x$`not tested`))),
+    not_esc_non_via = map(data, ~broom::tidy(wilcox.test(.x$`non-escape`, .x$`not tested`)))
+  ) |>
+  pivot_longer(
+    cols = c(esc_not_esc, esc_non_via, not_esc_non_via),
+    names_to = "test",
+    values_to = "stats"
+  ) |>
+  mutate(
+    column1 = case_when(
+      test == "esc_not_esc" ~ "escape",
+      test == "esc_non_via" ~ "escape",
+      test == "not_esc_non_via" ~ "not tested"
+    ),
+    column2 = case_when(
+      test == "esc_not_esc" ~ "non-escape",
+      test == "esc_non_via" ~ "not tested",
+      test == "not_esc_non_via" ~ "non-escape"
+    )
+  )
+
+data_stats_esc = data_stats_esc |>
+  unnest_wider(stats) |>
+  select(Measure, column1, column2, p.value)
+
+y_delta = .25 # distance between adjacent bloxplots (.8/number of boxplots)
+x_delta = .185 #.075 # distance between line segments
+data_comparisons_esc <- data_stats_esc |>
+  mutate(
+    # apply overall false-discovery rate correction
+    p.value = p.adjust(p.value, method = "fdr"),
+    # set stars
+    label = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01 ~ "**",
+      p.value < 0.05 ~ "*",
+      TRUE ~ "NS"
+    ),
+    # offset to correct for stars not being vertically centered
+    label_off = case_when(
+      label == "NS" ~ 0,
+      TRUE ~ -.04,
+    ),
+    # calculate x and y offsets for line segments
+    yoff1 = case_when(
+      column1 == "escape" ~ y_delta,
+      column1 == "not tested" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    yoff2 = case_when(
+      column2 == "escape" ~ y_delta,
+      column2 == "not tested" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    xoff = case_when(
+      column1 == "escape" & column2 == "non-escape" ~ 0,
+      column1 == "not tested" & column2 == "non-escape" ~ x_delta,
+      TRUE ~ 2 * x_delta
+    )
+  )
+
+#data_comparisons = data_comparisons %>% arrange(factor(Measure, levels = x_order))
+
+my_plot = nested_comb_data_long_esc %>% 
+  subset(Measure != "FoldX") %>% subset(Measure != "PyRosetta") %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure, levels = x_order), fill = factor(type, rev(custom_order_esc)))) +
+  #ggplot(aes(x = value, y = Measure, fill = type)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 #"not viable" = "#AF596E"),
+                               "not tested" = "#C5C5C5"),
+                      breaks = custom_order_esc,
+                      name = "spike mutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_esc,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, levels = x_order)) + yoff1, 
+      yend = as.numeric(factor(Measure, levels = x_order)) + yoff2
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_esc,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, levels = x_order)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.02, 1.8) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Grammaticality (ESM2, unmasked)" = "Grammaticality\n(ESM2, unmasked)",
+                              "Grammaticality (ESM2, masked)" = "Grammaticality\n(ESM2, masked)",
+                              "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  theme_classic() + ylab("") + theme(legend.position = "top")
+my_plot
+
+fname = paste0('BA1_all_measure_boxplot_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = my_plot,
+  width = 6.5, height = 5.5, units = "in"
+)
+#layer_data(plot = my_plot) #offset (y) is .1875
+
+```
+
+# REDO Escape Barplot
+```{r}
+custom_order_esc = c("escape", "non-escape", "not viable")
+x_order = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVE"
+         ))
+
+data_comparisons_esc_gramm = data_comparisons_esc %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+data_comparisons_esc_sem = data_comparisons_esc %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+nested_comb_data_long_esc_gramm = nested_comb_data_long_esc %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+nested_comb_data_long_esc_sem = nested_comb_data_long_esc %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+esc_gramm_plot = nested_comb_data_long_esc_gramm %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure, level = x_order), fill = factor(type, rev(custom_order_esc)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E"),
+                      breaks = custom_order_esc,
+                      name = "spike\nmutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_esc_gramm,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order)) + yoff2
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_esc_gramm,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.02, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Grammaticality (ESM2, unmasked)" = "Grammaticality\n(ESM2, unmasked)",
+                              "Grammaticality (ESM2, masked)" = "Grammaticality\n(ESM2, masked)",
+                              "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  theme_classic() + ylab("") + theme(legend.position = "top")
+esc_gramm_plot
+
+esc_sem_plot = nested_comb_data_long_esc_sem %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure), fill = factor(type, rev(custom_order_esc)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E"),
+                      breaks = custom_order_esc,
+                      name = "spike mutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_esc_sem,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure)) + yoff1, 
+      yend = as.numeric(factor(Measure)) + yoff2
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_esc_sem,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.04, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic change\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic change\n(Hie)")
+                   ) +
+  theme_classic() + ylab("") + theme(legend.position = "none")
+esc_sem_plot
+```
+
+# EVE/scape Agreement
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/cov/evescape")
+#fname = "Wuhan(A)_single_mutation_predictions.csv"
+fname = "full_BA1_evescape.csv"
+fname = "Omicron(BA.1)_single_mutation_predictions.csv"
+df_eves_BA1 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  arrange(i) %>%
+  mutate(ID = paste0(wt, i, mut)) %>%
+  select(ID, evescape, fitness_eve) %>%
+  rename("fitness_eve" = "eve_BA1",
+         "evescape" = "evescape_BA1")
+  #select(mutations, EVEscape)
+df_eves_BA1
+
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/cov/evescape")
+#fname = "Wuhan(A)_single_mutation_predictions.csv"
+fname = "full_Delta_evescape.csv"
+
+df_eves_Delta = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  arrange(i) %>%
+  mutate(ID = paste0(wt, i, mut)) %>%
+  select(ID, evescape, fitness_eve) %>%
+  rename("fitness_eve" = "eve_Delta",
+         "evescape" = "evescape_Delta")
+  #select(mutations, EVEscape)
+df_eves_Delta
+
+fname = "full_Starr_evescape.csv"
+
+df_eves = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  arrange(i) %>%
+  mutate(ID = paste0(wt, i, mut)) %>%
+  select(ID, evescape, fitness_eve) %>%
+  rename("fitness_eve" = "eve_Starr",
+         "evescape" = "evescape_Starr")
+  #select(mutations, EVEscape)
+df_eves 
+
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/cov/evescape")
+#fname = "Wuhan(A)_single_mutation_predictions.csv"
+fname = "spike_scores_target_spike_BA1_allStructures_len_set_1249.csv"
+
+df_eves_BA1_len = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  arrange(i) %>%
+  mutate(ID = paste0(wt, i, mut)) #%>%
+  #select(ID, evescape, fitness_eve) %>%
+  #rename("fitness_eve" = "eve_Starr",
+  #       "evescape" = "evescape_Starr")
+  #select(mutations, EVEscape)
+df_eves_BA1_len 
+
+all_eves = df_eves %>%
+  full_join(df_eves_Delta, by = c('ID' = 'ID')) %>%
+  full_join(df_eves_BA1, by = c('ID' = 'ID')) %>%
+   mutate(site = as.numeric(stringr::str_sub(ID, 2, -2)))
+all_eves
+
+df_eves_BA1$ID[!(df_eves$ID %in% df_eves_BA1$ID)]
+
+df_eves$ID[!(df_eves$ID %in% df_eves_BA1$ID)]
+length(comb_data_norm$ID)
+length(df_eves_BA1$ID)
+df_eves_BA1$ID[!(df_eves_BA1$ID %in% comb_data_norm$ID)]
+
+mismatch_sites = unique(as.numeric(
+  stringr::str_sub(
+    df_eves_BA1$ID[!(df_eves_BA1$ID %in% comb_data_norm$ID)], 
+    2, -2))
+)
+
+mismatch_sites_len = unique(as.numeric(
+  stringr::str_sub(
+    df_eves_BA1_len$ID[!(df_eves_BA1_len$ID %in% comb_data_norm$ID)], 
+    2, -2))
+)
+  
+
+df_eves_BA1 %>% 
+  mutate(site = as.numeric(stringr::str_sub(ID, 2, -2))) %>%
+  subset(site %in% mismatch_sites)
+df_eves_BA1_len %>% 
+  mutate(site = as.numeric(stringr::str_sub(ID, 2, -2))) %>%
+  subset(site %in% mismatch_sites_len)
+comb_data_norm %>%
+  mutate(site = as.numeric(stringr::str_sub(ID, 2, -2))) %>%
+  subset(site %in% mismatch_sites_len)
+
+df_eves_BA1_len[!is.na(df_eves_BA1_len$evol_indices) & df_eves_BA1_len$i == 67, ]
+```
+
+
+```{r}
+ggplot(all_eves, aes(x = eve_Delta, y = (eve_Starr))) +
+  #geom_line() +
+  geom_point() +
+  labs(x = "EVE Delta", y = "EVE Starr", title = "") + 
+  theme_classic()
+
+ggplot(all_eves, aes(x = eve_BA1, y = (eve_Starr))) +
+  #geom_line() +
+  geom_point() +
+  labs(x = "EVE BA.1", y = "EVE Starr", title = "") + 
+  theme_classic()
+
+ggplot(all_eves, aes(x = evescape_Delta, y = (evescape_Starr))) +
+  #geom_line() +
+  geom_point() +
+  labs(x = "EVEscape Delta", y = "EVEscape Starr", title = "") + 
+  theme_classic()
+
+ggplot(all_eves, aes(x = evescape_BA1, y = (evescape_Starr))) +
+  #geom_line() +
+  geom_point() +
+  labs(x = "EVEscape BA.1", y = "EVEscape Starr", title = "") + 
+  theme_classic()
+```
+
+```{r}
+ggplot(all_eves, aes(x = site, y = (evescape_Starr))) +
+  #geom_line() +
+  geom_point(size = .5) +
+  labs(x = "site", y = "EVEscape Starr", title = "") + 
+  theme_classic()+ ylim(-5.5, 0)
+
+ggplot(all_eves, aes(x = site, y = (evescape_BA1))) +
+  #geom_line() +
+  geom_point(size = .5) +
+  labs(x = "site", y = "EVEscape BA.1", title = "") + 
+  theme_classic()+ ylim(-5.5, 0)
+
+ggplot(all_eves, aes(x = site, y = (evescape_Delta))) +
+  #geom_line() +
+  geom_point(size = .5) +
+  labs(x = "site", y = "EVEscape Delta", title = "") + 
+  theme_classic() + ylim(-5.5, 0)
+```
