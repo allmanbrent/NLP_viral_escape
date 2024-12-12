@@ -14,7 +14,7 @@ conda env create -f environment.yml
 Note that while the script has "ESM2" in the title, the `model_name` parameter defines which model will be used. 
 ```
 # run on the coronavirus spike single mutants
-screen -d -m -L -Logfile cov_starr_screen.log python language_models/bin/cov_fasta_ESM2.py \
+screen -d -m -L -Logfile cov_starr_screen.log python language_models/bin/github_cov_fasta_ESM2.py \
      data/cov/cov2_spike_wt.fasta \
      data/cov/starr_library.fasta \
      --model_name bilstm \
@@ -23,7 +23,7 @@ screen -d -m -L -Logfile cov_starr_screen.log python language_models/bin/cov_fas
      > cov_starr_fasta.log &
 
 # run on the coronavirus Omicron-defining mutations
-screen -d -m -L -Logfile cov_omicron_muts_screen.log python language_models/bin/cov_fasta_ESM2.py \
+screen -d -m -L -Logfile cov_omicron_muts_screen.log python language_models/bin/github_cov_fasta_ESM2.py \
      data/cov/cov2_spike_wt.fasta \
      data/cov/wuhan_mutants.fasta \
      --model_name bilstm \
@@ -38,7 +38,7 @@ screen -d -m -L -Logfile cov_omicron_muts_screen.log python language_models/bin/
 
 ```
 # run on the coronavirus Starr mutations
-screen -d -m -L -Logfile cov_Starr_ESM2.log python bin/cov_fasta_ESM2.py \
+screen -d -m -L -Logfile cov_Starr_ESM2.log python bin/github_cov_fasta_ESM2.py \
      data/cov/cov2_spike_wt.fasta \
      data/cov/starr_library.fasta \
      --model_name esm2_t30_150M_UR50D \
@@ -47,7 +47,7 @@ screen -d -m -L -Logfile cov_Starr_ESM2.log python bin/cov_fasta_ESM2.py \
      > cov_Starr_ESM2_screen.log &
 
 # run on the coronavirus Omicron-defining mutations
-screen -d -m -L -Logfile cov_omicron_muts_ESM2.log python bin/cov_fasta_ESM2.py \
+screen -d -m -L -Logfile cov_omicron_muts_ESM2.log python bin/github_cov_fasta_ESM2.py \
      data/cov/cov2_spike_wt.fasta \
      data/cov/wuhan_mutants.fasta \
      --model_name esm2_t30_150M_UR50D \
@@ -56,7 +56,7 @@ screen -d -m -L -Logfile cov_omicron_muts_ESM2.log python bin/cov_fasta_ESM2.py 
      > cov_omicron_muts_ESM2_screen.log &
 
 # run on the flu H1 HA mutations
-screen -d -m -L -Logfile flu_ESM2.log python bin/cov_fasta_ESM2.py \
+screen -d -m -L -Logfile flu_ESM2.log python bin/github_cov_fasta_ESM2.py \
      data/flu/WSN1993_H1_HA.fa \
      data/flu/flu_H1_mutant_library.fasta \
      --model_name esm2_t30_150M_UR50D \
@@ -65,7 +65,7 @@ screen -d -m -L -Logfile flu_ESM2.log python bin/cov_fasta_ESM2.py \
      > flu_ESM2_screen.log &
 
 # run on the hiv BG505 mutations
-screen -d -m -L -Logfile hiv_ESM2.log python bin/cov_fasta_ESM2.py \
+screen -d -m -L -Logfile hiv_ESM2.log python bin/github_cov_fasta_ESM2.py \
      data/hiv/hiv_env_translated.fasta \
      data/hiv/hiv_BG505_mutant_library.fasta \
      --model_name esm2_t30_150M_UR50D \
@@ -91,3 +91,6 @@ MutRank ([Gong et al. 2024](https://openreview.net/forum?id=XblaAN1jq6&referrer=
 
 ## Stability Oracle
 The original Github repository for Stability Oracle ([Diaz et al. 2024](https://www.nature.com/articles/s41467-024-49780-2)) can be found at [https://github.com/danny305/StabilityOracle](https://github.com/danny305/StabilityOracle).
+
+## EVE and EVEscape
+The original Github repository for EVEscape ([Thadani et al. 2023](https://www.nature.com/articles/s41586-023-06617-0)) can be found at [https://github.com/OATML-Markslab/EVEscape/tree/main](https://github.com/OATML-Markslab/EVEscape/tree/main). Results for BA.1 and Delta spikes were downloaded from [evescape.org](evescape.org) and are available in the [data/cov/evescape](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data/cov/evescape) directory of our repository. Results for Starr et al spike, influenza HA, and HIV env are available in the [data/](https://github.com/allmanbrent/NLP_viral_escape/blob/main/data) directory in their respective `evescape` folders.
