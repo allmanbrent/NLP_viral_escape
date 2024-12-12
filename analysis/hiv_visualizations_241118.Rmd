@@ -1,0 +1,1762 @@
+---
+title: "hiv_visualizations"
+output: html_document
+date: '2024-04-08'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(ggridges)
+library(viridis)
+library(plyr)
+library(tidyr)
+library(reshape2)
+library(dplyr)
+library(cowplot)
+library(ggpubr)
+library(Biostrings)
+
+library(purrr)
+
+three_to_single <- function(three_letter) {
+  aa_map <- list(
+    ALA = "A",
+    ARG = "R",
+    ASN = "N",
+    ASP = "D",
+    CYS = "C",
+    GLN = "Q",
+    GLU = "E",
+    GLY = "G",
+    HIS = "H",
+    ILE = "I",
+    LEU = "L",
+    LYS = "K",
+    MET = "M",
+    PHE = "F",
+    PRO = "P",
+    SER = "S",
+    THR = "T",
+    TRP = "W",
+    TYR = "Y",
+    VAL = "V"
+    # You can add more amino acids if needed
+  )
+  
+  return(aa_map[[three_letter]])
+}
+
+aa_alphabet = c("A","R","N","D","C",
+                "Q","E","G","H","I",
+                "L","K","M","F","P",
+                "S","T","W","Y","V")
+
+get_seqs = function(file_name){
+  fasta_file <- file_name
+  
+  # Read the lines of the FASTA file
+  fasta_lines <- readLines(fasta_file)
+  
+  # Extract the sequence information
+  sequence_info <- grep("^>", fasta_lines, value = TRUE)
+sequence_name <- gsub(">", "", sequence_info)
+sequence <- sapply(seq_along(sequence_info), function(i) {
+  start <- grep(sequence_info[i], fasta_lines)[1] + 1
+  end <- ifelse(i == length(sequence_info), length(fasta_lines), grep(sequence_info[i + 1], fasta_lines)[1] - 1)
+  paste(fasta_lines[start:end], collapse = "")
+}, simplify = TRUE)
+
+# Create a named vector with one entry
+fasta_data <- setNames(sequence, sequence_name)
+  return(fasta_data)
+}
+```
+
+#HIV Experimental Data
+
+```{r}
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+
+hiv_seq = get_seqs("hiv/BG505_env_translated.fasta")[[1]]
+threshold = 0.11 # as defined by Hie
+
+# fname = "hiv/Haddox_supp/results/HXB2_numbering/BG505_to_HXB2.csv"
+fname = "hiv/Dingens_ab_escape/BG505_to_HXB2.csv"
+site_map_csv = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+ab_PGT121_ = c('332', '334', '327', '415', '330', '325', '408', '406', '428', '323', '443', '419', '326', '471', '380')
+ab_VRC01_ = c('279', '326', '369', '197', '209')
+ab_101074_ = c('334', '325', '332', '327', '415', '330', '204', '441', '323')
+ab_3BNC117_ = c('207', '304', '197', '318', '471', '279', '119', '308', '209', '206', '182', '120', '204', '369', '274')
+ab_VRC34_ = c('88', '85', '90', '524', '512', '513', '515', '516', '229', '514', '243', '518', '629')
+ab_PG9_ = c('160', '171', '169', '162')
+ab_PGT151_ = c('613', '611', '512', '637', '639', '514', '647', '322a', '318', '327', '224', '629', '142')
+ab_PGT145_ = c('166', '160', '121', '169', '162', '127', '124', '315', '123', '202', '197', '312', '203')
+ab_10E8_ = c('671', '673', '672', '683', '680', '676', '643', '682', '609')
+
+values <- site_map_csv$original
+site_map <- setNames(site_map_csv$original, site_map_csv$new)#setNames(as.list(values), site_map_csv$new)
+
+fname = "hiv/Dingens_ab_escape/summary_3BN-1074-pool-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+pool_3BNC117_101074 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_pool_3BNC117_101074 = 0.0014 
+#threshold_pool_3BNC117_101074 = threshold
+pool_3BNC117_101074 = pool_3BNC117_101074 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_pool_3BNC117_101074 = ifelse(sig == "True", "escape", "non-escape")
+         #ab_pool_3BNC117_101074 = ifelse(mutfracsurvive >= threshold_pool_3BNC117_101074, "escape", "non-escape")#,
+         # ab_PGT145 = ifelse(site %in% ab_PGT145_, "escape", "non-escape"),
+         # ab_PGT121 = ifelse(site %in% ab_PGT121_, "escape", "non-escape"),
+         # ab_VRC01 = ifelse(site %in% ab_VRC01_, "escape", "non-escape"),
+         # ab_101074 = ifelse(site %in% ab_101074_, "escape", "non-escape"),
+         # ab_3BNC117 = ifelse(site %in% ab_3BNC117_, "escape", "non-escape"),
+         # ab_VRC34 = ifelse(site %in% ab_VRC34_, "escape", "non-escape"),
+         # ab_PG9 = ifelse(site %in% ab_PG9_, "escape", "non-escape"),
+         # ab_PGT151 = ifelse(site %in% ab_PGT151_, "escape", "non-escape"),
+         # ab_10E8 = ifelse(site %in% ab_10E8_, "escape", "non-escape"),
+         # any_ab_ESC = rowSums(across(
+         #   names(pool_3BNC117_101074 %>% select(starts_with("ab_"))),
+         #   ~.x == "escape")) > 0
+         )
+subset(pool_3BNC117_101074, ab_pool_3BNC117_101074 == "escape")
+
+## PGT121 ##
+fname = "hiv/Dingens_ab_escape/summary_PGT121-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_PGT121 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_PGT121 = 0.011 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_PGT121 = data_PGT121 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_PGT121 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_PGT121, ab_PGT121 == "escape")
+
+## VRC01 ##
+fname = "hiv/Dingens_ab_escape/summary_VRC01-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_VRC01 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_VRC01 = 0.01 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_VRC01 = data_VRC01 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_VRC01 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_VRC01, ab_VRC01 == "escape")
+
+## 101074 ##
+fname = "hiv/Dingens_ab_escape/summary_101074-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_101074 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_101074 = 0.018 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_101074 = data_101074 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_101074 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_101074, ab_101074 == "escape")
+
+## 3BNC117 ##
+fname = "hiv/Dingens_ab_escape/summary_3BNC117-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_3BNC117 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_3BNC117 = 0.018 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_3BNC117 = data_3BNC117 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_3BNC117 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_3BNC117, ab_3BNC117 == "escape")
+
+## VRC34 ##
+fname = "hiv/Dingens_ab_escape/summary_VRC34-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_VRC34 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_VRC34 = 0.083 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_VRC34 = data_VRC34 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_VRC34 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_VRC34, ab_VRC34 == "escape")
+
+## PG9 ##
+fname = "hiv/Dingens_ab_escape/summary_PG9-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_PG9 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_PG9 = 0.083 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_PG9 = data_PG9 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_PG9 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_PG9, ab_PG9 == "escape")
+
+## PGT151 ##
+fname = "hiv/Dingens_ab_escape/summary_PGT151-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_PGT151 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_PGT151 = 0.043 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_PGT151 = data_PGT151 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_PGT151 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_PGT151, ab_PGT151 == "escape")
+
+## PGT145 ##
+fname = "hiv/Dingens_ab_escape/summary_PGT145-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_PGT145 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_PGT145 = 0.043 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_PGT145 = data_PGT145 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_PGT145 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_PGT145, ab_PGT145 == "escape")
+
+## 10E8 ##
+fname = "hiv/Dingens_ab_escape/summary_10E8-meanmutfracsurvive.csv_with_sig_sites_fdr0.01.csv"
+data_10E8 = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+threshold_10E8 = 0.0038 # this threshold doesnt yield the same results as reported in their paper. going to just manually take their sites.
+data_10E8 = data_10E8 %>% 
+  mutate(HXB2_site = site_map[as.character(site)]) %>% 
+  arrange(HXB2_site,mutation) %>% relocate("HXB2_site") %>% 
+  mutate(ID = paste(wildtype, site, mutation, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, mutation, sep = ""),
+         ab_10E8 = ifelse(sig == "True", "escape", "non-escape")
+         )
+subset(data_10E8, ab_10E8 == "escape")
+
+```
+
+## Combine Antibody Data
+```{r}
+cnames = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2")
+hiv_DMS_comb = data_10E8 %>% 
+  full_join(data_PGT145, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_10E8", "data_PGT145")) %>% 
+  full_join(data_101074, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_PGT145", "data_101074")) %>% 
+  full_join(data_3BNC117, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_101074", "data_3BNC117")) %>% 
+  full_join(data_PG9, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_3BNC117", "data_PG9")) %>% 
+  full_join(data_PGT121, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_PG9", "data_PGT121")) %>% 
+  full_join(data_VRC01, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_PGT121", "data_VRC01")) %>% 
+  full_join(data_PGT151, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_VRC01", "data_PGT145")) %>% 
+  full_join(data_VRC34, by = c("HXB2_site",  "site", "wildtype", "mutation", "ID", "ID_HXB2"),
+            suffix = c("data_PGT145", "data_VRC34")) 
+hiv_DMS_comb = hiv_DMS_comb %>%
+  mutate(any_ab_ESC = rowSums(
+    across(
+      names(hiv_DMS_comb %>% select(starts_with("ab_"))),
+      ~.x == "escape")) > 0
+    ) %>%
+  select(-(names(hiv_DMS_comb %>% select(starts_with("ab_"))))) %>%
+  select(-(names(hiv_DMS_comb %>% select(starts_with("P"))))) %>%
+  select(-(names(hiv_DMS_comb %>% select(starts_with("Q"))))) %>%
+  select(-(names(hiv_DMS_comb %>% select(starts_with("sig"))))) %>%
+  select(-(names(hiv_DMS_comb %>% select(starts_with("mutfrac")))))
+hiv_DMS_comb
+```
+
+## Viability Data
+
+```{r}
+fname = "hiv/Haddox_supp/results/prefs/rescaled_BG505_avgprefs.csv"
+env_prefs_scaled = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "")
+wt_df = read.delim(file = "hiv/Haddox_supp/results/prefs/BG505_wildtypeoverlay.csv", 
+                   header = TRUE, sep=",",quote = "\"", dec = ".", fill = TRUE, comment.char = "")
+# ^^ shows us that the sites in the preferences are not in the HXB2 indeces
+
+fname = "hiv/Haddox_supp/results/HXB2_numbering/BG505_to_HXB2.csv"
+site_map_csv_haddox = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+values <- site_map_csv_haddox$original
+site_map_haddox <- setNames(site_map_csv_haddox$original, site_map_csv_haddox$new)#setNames(as.list(values), site_map_csv$new)
+
+env_prefs_scaled_long = env_prefs_scaled %>% 
+  full_join(wt_df, by = c("site")) %>%
+  mutate(HXB2_site = site_map_haddox[as.character(site)]) %>% 
+  pivot_longer(cols = c(-site, -wildtype, -HXB2_site),
+               names_to = "Amino_Acid",
+               values_to = "pref_scaled") %>%
+  arrange(HXB2_site) %>% relocate("HXB2_site") %>%
+  mutate(pref_ranked = rank(pref_scaled, na.last = "keep"),
+         ID = paste(wildtype, site, Amino_Acid, sep = ""),
+         ID_HXB2 = paste(wildtype, HXB2_site, Amino_Acid, sep = ""))
+
+env_prefs_scaled_long
+subset(env_prefs_scaled_long, site == "317a")
+```
+
+###Viability Threshold
+
+```{r}
+# env_prefs_scaled_long %>%
+#   ggplot(aes(x =pref_ranked, y = pref_scaled)) +
+#   geom_hline(yintercept = quantile(env_prefs_scaled_long$pref_scaled, 
+#                                    probs = 0.01, type = 1, names = FALSE),
+#              linetype = "dotted")
+
+env_prefs_scaled_long %>%
+  ggplot(aes(x =log10(pref_scaled))) +
+  geom_histogram(aes(y = ..density..),
+                 bins = 100,
+                 color="black",
+                 fill="white") +
+  geom_vline(xintercept = quantile(log10(env_prefs_scaled_long$pref_scaled), 
+                                   probs = 0.01, type = 1, names = FALSE),
+             linetype = "dotted")
+
+quant = round(quantile(log10(env_prefs_scaled_long$pref_scaled),
+                 probs = 0.01, type = 1, names = FALSE),
+              digits = 6)
+
+ggplot(env_prefs_scaled_long, aes(x = pref_ranked, y = log10(pref_scaled))) +
+  geom_line() +
+  geom_point() +
+  geom_hline(yintercept = quant,
+             linetype = "dotted") +
+  geom_text(aes(x=max(pref_ranked), 
+                label= paste0(as.character(quant), ", 99% quantile"), 
+                y=quant),
+            colour="black", angle=0, hjust = 1, vjust = 1.1, check_overlap = TRUE) + 
+  geom_hline(yintercept = log10(0.0005),
+             linetype = "dotted", color = "blue") +
+  geom_text(aes(x=max(pref_ranked), 
+                label= paste0(as.character(0.0005), ", stringent error rate"), 
+                y=log10(0.0005)),
+            colour="blue", angle=0, hjust = 1, vjust = -0.2, check_overlap = TRUE) +
+  geom_hline(yintercept = log10(0.0008),
+             linetype = "dotted", color = "red") +
+  geom_text(aes(x=max(pref_ranked), 
+                label= paste0(as.character(0.0008), ", non. synon. post-selection freq"), 
+                y=log10(0.0008)),
+            colour="red", angle=0, hjust = 1, vjust = -0.2, check_overlap = TRUE) +
+  labs(x = "ranked preference", y = "log(preference)", title = "")
+
+plot_ranked_thresholds = ggplot(env_prefs_scaled_long, aes(x = pref_ranked, y = log10(pref_scaled))) +
+  geom_line() +
+  geom_point() +
+  geom_hline(yintercept = -1,
+             linetype = "dotted") +
+  geom_text(aes(x= 0,#max(pref_ranked), 
+                label= paste0(
+                  dim(subset(env_prefs_scaled_long, log10(pref_scaled) >= -1))[1], 
+                  " mutations above 0.1"), 
+                y=-1),
+            colour="black", angle=0, hjust = 0, vjust = 1.1, check_overlap = TRUE) + 
+  geom_hline(yintercept = -3,
+             linetype = "dotted") +
+  geom_text(aes(x=max(pref_ranked), 
+                label= paste0(
+                  dim(subset(env_prefs_scaled_long, log10(pref_scaled) >= -3))[1], 
+                  " mutations above 0.001"), 
+                y=-3),
+            colour="black", angle=0, hjust = 1, vjust = 1.1, check_overlap = TRUE) +
+  labs(x = "ranked preference", y = "preference", title = "") + 
+  theme_classic()
+plot_ranked_thresholds
+
+thresh = .001
+env_prefs_scaled_long = env_prefs_scaled_long %>% 
+  # mutate(viab_thresh0005 = case_when(pref_scaled > thresh ~ "viable",
+  #                                     TRUE ~ "not viable"),
+  #        viab_threshquant99 = case_when(log10(pref_scaled) > quant ~ "viable",
+  #                                     TRUE ~ "not viable"),
+  #        viab_thresh0008 = case_when(pref_scaled > 0.0008 ~ "viable",
+  #                                     TRUE ~ "not viable"),
+  #        ID = paste0(wildtype,site,Amino_Acid)) %>%
+  mutate(viab_thresh001 = case_when(pref_scaled >= .001 ~ "viable",
+                                     TRUE ~ "not viable"),
+         
+         viab_thresh1 = case_when(pref_scaled >= .1 ~ "viable",
+                                     TRUE ~ "not viable"),
+         ID = paste0(wildtype,site,Amino_Acid)) %>%
+  mutate(HXB2_site = site_map_haddox[as.character(site)])
+  # group_by(site) %>%
+  # mutate(my_shannon_entropy = shannon.entropy(pref_scaled),
+  #        my_eff_tolerated = exp(my_shannon_entropy),
+  #   rev_rank_by_site = max(rank(pref_scaled)) + 1 - rank(pref_scaled), #lower numbers mean more preferable
+  #   my_viab_eff_tol = case_when(rev_rank_by_site <= round(my_eff_tolerated) ~ "viable",
+  #                                     TRUE ~ "not viable"))
+env_prefs_scaled_long
+site_map_haddox
+env_prefs_scaled
+#subset(env_prefs_scaled_long, is.na(HXB2_site))
+
+# subset(env_prefs_scaled_long, viab_thresh0008 == "not viable")
+# subset(env_prefs_scaled_long, viab_thresh0005 == "not viable")
+# subset(env_prefs_scaled_long, viab_threshquant99 == "not viable")
+
+fname = paste0('hiv_amino_acid_prefs_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = plot_ranked_thresholds + theme(plot.background = element_rect(fill = "white", linetype = "blank"),panel.border = element_blank()),
+  width = 3.5, height = 3, units = "in"
+)
+
+```
+
+#Hie bespoke model
+
+```{r}
+# fname = "hiv/hiv_BG505_pretrtain_w_covid_script_logit_odds_screen.log"
+# df_Hie_hiv = read.delim(file = fname, header = TRUE, sep="",quote = "\"",
+#                  dec = ".", fill = TRUE, comment.char = "#")
+# df_Hie_hiv = df_Hie_hiv %>% dplyr::rename("Semantic.change_Hie" = "Semantic.change",
+#                "Grammaticality_Hie" = "Grammaticality") %>%
+#   select(-Mutations, -Sequence)
+# df_Hie_hiv   
+
+fname = "hiv/analyze_semantics_hiv_bilstm_512.txt"
+df_Hie_hiv = read.delim(file = fname, header = TRUE, sep="\t",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+df_Hie_hiv = df_Hie_hiv %>% dplyr::rename("Semantic.change_Hie" = "change",
+               "Grammaticality_Hie" = "prob") %>%
+  mutate(ID = paste0(wt, as.character(pos + 1), mut),
+         Grammaticality_Hie = log10(Grammaticality_Hie),
+         Semantic.change_Hie = log10(Semantic.change_Hie)
+         ) %>%
+  select(-is_viable, -is_escape, -pos, -wt, - mut)
+ df_Hie_hiv 
+```
+
+Read in the 
+# ESM-2 Data
+
+```{r}
+fname = "hiv/hiv_BG505_pretrain_screen_ESM2_logit_odds.log"
+df_ESM2_hiv = read.delim(file = fname, header = TRUE, sep="",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+df_ESM2_hiv = df_ESM2_hiv %>% dplyr::rename("Semantic.change_ESM2" = "Semantic.change",
+               "Grammaticality_ESM2_log" = "Grammaticality") %>%
+  mutate(Grammaticality_ESM2_prob = 10^Grammaticality_ESM2_log) %>%
+  mutate(site = as.integer(substr(Mutations, 2, nchar(Mutations) - 1))) %>%
+  select(-Mutations, -Sequence)
+
+df_ESM2_hiv
+
+comb_data = df_ESM2_hiv
+```
+
+Read in the New 
+#ESM-2 Grammaticality with Masking Data
+
+```{r}
+
+fname = "hiv/ESM_probabilities_hiv_BG505.fasta.csv"
+df_ESM2_hiv_mask = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+df_ESM2_hiv_mask <- df_ESM2_hiv_mask %>%
+  pivot_longer(cols = -X,
+               names_to = "Amino_Acid",
+               values_to = "prob_ESM2_masked")
+
+df_Hie_hiv_temp <- df_Hie_hiv %>%
+  mutate(first_letter = substr(ID, 1, 1),
+         integer_col = as.numeric(substring(ID, 2, nchar(ID) - 1)),
+         second_letter = substr(ID, nchar(ID), nchar(ID)),
+         partial_id = paste0(integer_col, second_letter))
+
+df_ESM2_hiv_mask <- df_ESM2_hiv_mask %>%
+  mutate(partial_id = paste0(X, Amino_Acid))
+
+df_ESM2_hiv_mask <- df_ESM2_hiv_mask %>%
+  left_join(df_Hie_hiv_temp, by = 
+               c("X" = "integer_col", 
+                 "Amino_Acid" = "second_letter", 
+                 "partial_id" = "partial_id")) %>%
+  select(-Semantic.change_Hie, -Grammaticality_Hie, 
+          -first_letter) %>%
+  mutate(
+    ID = case_when(
+    is.na(ID) ~ paste0(Amino_Acid,X,Amino_Acid),
+    TRUE ~ ID),
+    mutant = case_when(substr(ID, nchar(ID), nchar(ID)) == substring(ID, 1, 1) ~ "wt",
+                   TRUE ~ "mutant")) %>%
+  select(-X, -Amino_Acid, -partial_id)
+df_ESM2_hiv_mask
+```
+
+Read in and process the 
+#MutComputeX data
+
+```{r}
+fname = "hiv/bg505-env-translated_EnsResNet_0222.csv"
+df_mutcomp = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+names(df_mutcomp)
+head(df_mutcomp)
+df_mutcomp <- df_mutcomp %>%
+  rename(prAA = "mut_pred",
+         pred_prob = "mut_pred_prob") %>%
+  pivot_longer(cols = starts_with("pr"),
+               names_to = "Amino_Acid",
+               values_to = "prob_MutCompX") %>%
+  select(chain_id, pos, wtAA, mut_pred, Amino_Acid, prob_MutCompX) %>%
+  mutate(
+    Amino_Acid = gsub("pr", "", Amino_Acid),
+    Amino_Acid = sapply(Amino_Acid, three_to_single),
+    wtAA = sapply(wtAA, three_to_single),
+    mut_pred = sapply(mut_pred, three_to_single),
+    Mutations = paste(wtAA, pos, Amino_Acid, sep = "")
+  ) %>% 
+  filter(chain_id == "A") %>%
+  select(Mutations,prob_MutCompX)
+#high probability means more like the original sequence, so we want to invert^ this to match semantic change
+df_mutcomp
+```
+
+Read in and process the
+#MutRank data
+
+```{r}
+fname = "hiv/bg505-env_mutrank_0524_uncertainty.csv"
+df_mutrank = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+names(df_mutrank)
+head(df_mutrank)
+df_mutrank <- df_mutrank %>%
+  # rename(prAA = "mut_pred",
+  #        pred_prob = "mut_pred_prob") %>%
+  # rename(mut_pred = "pred_AA",
+  #        mut_pred_prob = "pred_prob") %>%
+  pivot_longer(cols = starts_with("mean"),
+               names_to = "Amino_Acid",
+               values_to = "prob_MutRank") %>%
+  select(chain_id, res_seq_num, wt_AA, Amino_Acid, prob_MutRank) %>%
+  mutate(
+    Amino_Acid = gsub("mean_", "", Amino_Acid),
+    Amino_Acid = sapply(Amino_Acid, three_to_single),
+    wt_AA = sapply(wt_AA, three_to_single),
+    #mut_pred = sapply(mut_pred, three_to_single),
+    Mutations = paste(wt_AA, res_seq_num, Amino_Acid, sep = "")
+  ) %>% 
+  filter(chain_id == "A") %>%
+  select(Mutations,prob_MutRank)
+#high probability means more like the original sequence, so we want to invert^ this to match semantic change
+df_mutrank
+```
+
+Read in and process the 
+#StabilityOracle data
+
+```{r}
+fname = "hiv/bg505-env-translated_stability_oracle_0423_uncertainty.csv"
+df_stab_ora = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#")
+
+df_stab_ora <- df_stab_ora %>%
+  pivot_longer(cols = starts_with("mean_"),
+               names_to = "Amino_Acid",
+               values_to = "ddG_Stab_Ora") %>%
+  select(chain_id, res_seq_num, wt_AA, pred_AA, Amino_Acid, ddG_Stab_Ora) %>%
+  mutate(
+    Amino_Acid = gsub("mean_", "", Amino_Acid),
+    Amino_Acid = sapply(Amino_Acid, three_to_single),
+    wt_AA = sapply(wt_AA, three_to_single),
+    pred_AA = sapply(pred_AA, three_to_single),
+    Mutations = paste(wt_AA, res_seq_num, Amino_Acid, sep = ""),
+    wt_idx = paste0(wt_AA, res_seq_num, sep = "")
+  ) %>% 
+  filter(chain_id == "A") %>%
+  #filter(wt_AA != Amino_Acid) %>%
+ select(Mutations,ddG_Stab_Ora, wt_idx, res_seq_num)
+df_stab_ora
+
+# unique_values_df1 <- anti_join(df_stab_ora, df_Hie_hiv, by = c("Mutations" = "ID"))
+anti_join(df_Hie_hiv, df_stab_ora, by = c("ID" = "Mutations"))
+# anti_join(df_stab_ora, hiv_DMS_comb, by = c("Mutations" = "ID_HXB2"))
+anti_join(hiv_DMS_comb, df_stab_ora, by = c("ID_HXB2" = "Mutations"))
+
+# df_Hie_hiv
+# df_stab_ora
+```
+
+
+# EVEscape
+
+```{r}
+setwd("/Users/beallma/Documents/GitHub/NLP_viral_escape/data/hiv/evescape")
+#fname = "Wuhan(A)_single_mutation_predictions.csv"
+fname = "hiv_evescape_predictions.csv"
+
+df_eves = read.delim(file = fname, header = TRUE, sep=",",quote = "\"",
+                 dec = ".", fill = TRUE, comment.char = "#") %>%
+  arrange(i) %>%
+  mutate(ID = paste0(wt, i, mut)) %>%
+  select(ID, evescape, eve)
+  #select(mutations, EVEscape)
+df_eves 
+```
+
+```{r}
+ggplot(df_eves, aes(x = eve, y = (evescape))) +
+  #geom_line() +
+  geom_point() +
+  labs(x = "EVE", y = "EVEscape", title = "") + 
+  theme_classic()
+```
+
+
+# Combine 
+
+Note that mutations that were not tested for escape have a value of NA for the any_ab_ESC column. Mutations that were not tested for viability have values of NA in the viab_thresh001 column. These sites 
+```{r}
+hiv_DMS_comb_temp = hiv_DMS_comb %>% mutate(wt_idx_DMS = paste0(wildtype,HXB2_site)) # dataframe describing the DMS escape behavior of each mutation. Map between H1 and H3 site indices.
+df_Hie_hiv # contains the grammaticality and semantic change measures from the Hie model
+           # large gramm -> closer to wt -> large rank
+           # small sem change -> close to wt -> supposed less likely escape -> smaller rank
+env_prefs_scaled_long_brief = env_prefs_scaled_long %>% ungroup() %>% select(-Amino_Acid, -site, -wildtype) 
+env_prefs_scaled_long_brief
+                        # DMS fitness data. Large pref -> more fit -> larger rank 
+                        # (here the ranks within site have been reversed so small rank is more fit. ignore)
+df_stab_ora # ddG from stability Oracle. More negative -> more stable -> smaller rank, more positive -> less stable -> larger rank
+df_mutcomp # large probability -> more stable -> larger rank
+df_ESM2_hiv_mask # probability from masked ESM model -> larger probability -> more grammatical -> larger rank
+df_ESM2_hiv
+#anti_join(df_stab_ora, flu_DMS_comb, by = c('ID' = 'ID_H1'))
+
+hiv_comb_data = hiv_DMS_comb_temp %>% select(-site) %>%
+  full_join(env_prefs_scaled_long_brief %>% select(-ID,-HXB2_site), by = c('ID_HXB2' = 'ID_HXB2'))%>%
+  full_join(df_Hie_hiv, by = c('ID_HXB2' = 'ID')) %>%
+  full_join(df_ESM2_hiv_mask, by = c('ID_HXB2' = 'ID')) %>%
+  full_join(df_stab_ora, by = c('ID_HXB2' = 'Mutations')) %>%
+  full_join(df_mutcomp, by = c('ID_HXB2' = 'Mutations'))%>%
+  full_join(df_mutrank, by = c('ID_HXB2' = 'Mutations'))%>%
+  full_join(df_eves, by = c('ID_HXB2' = 'ID'))%>%
+  full_join(df_ESM2_hiv %>% select(c(Semantic.change_ESM2, Grammaticality_ESM2_log, ID)), by = c('ID_HXB2' = 'ID')) %>%
+  select(-starts_with("ab_")) %>%
+  select(-starts_with("mutfracsurvive")) %>%
+  select(-wt_idx, -wt_idx_DMS)
+
+my_measures = c("Semantic.change_Hie","Grammaticality_Hie", 
+                "prob_ESM2_masked", "ddG_Stab_Ora", "prob_MutCompX","prob_MutRank",
+                "Semantic.change_ESM2", "Grammaticality_ESM2_log", "evescape", "eve")
+# my_measures = colnames(flu_comb_data %>% 
+#                          select(-c(ID_H1, H1_site, mutation,
+#                                 ID_H1, wildtype, any_ab_ESC)))
+
+hiv_comb_data
+subset(hiv_comb_data, is.na(viab_thresh001)) %>% arrange(ID_HXB2)#nest(data = -ID_HXB2)
+subset(hiv_comb_data, is.na(any_ab_ESC)) %>% arrange(ID_HXB2)
+
+rev_rank_measures = c("ddG_Stab_Ora")
+
+comb_data_norm = hiv_comb_data %>% 
+  mutate_at(my_measures, function(x) rank(x, na.last = "keep")) %>%
+  mutate_at(rev_rank_measures, ~max(rank(., na.last = "keep"), na.rm=T) + 1 - rank(.,na.last = "keep") ) %>%
+  mutate_at(my_measures, function(x) x/max(x, na.rm = TRUE))
+
+
+comb_data_long = comb_data_norm %>% 
+  select(-wildtype, -mutation, -HXB2_site, -pref_scaled) %>%
+  pivot_longer(cols = my_measures ,
+               names_to = "Measure",
+               values_to = "rank") %>%
+  mutate(Measure = 
+           case_when(
+             Measure == "ddG_Stab_Ora" ~ "Stability Oracle",
+             Measure == "prob_MutCompX" ~ "MutComputeX",
+             Measure == "prob_MutRank" ~ "MutRank",
+             Measure == "prob_ESM2_masked" ~ "Grammaticality (ESM2, masked)",
+             Measure == "Semantic.change_Hie" ~ "Semantic change (Hie)",
+             Measure == "Grammaticality_Hie" ~ "Grammaticality (Hie)",
+             Measure == "Semantic.change_ESM2" ~ "Semantic change (ESM2)",
+             Measure == "Grammaticality_ESM2_log" ~ "Grammaticality (ESM2, unmasked)",
+             Measure == "evescape" ~ "EVEscape",
+             Measure == "eve" ~ "EVE"
+             )
+         )
+
+comb_data_norm
+comb_data_long
+subset(comb_data_norm, (any_ab_ESC))
+subset(comb_data_norm, (!any_ab_ESC) & (viab_thresh001 == "viable"))
+subset(comb_data_norm, (any_ab_ESC) & (viab_thresh001 == "not viable"))
+subset(comb_data_norm, (any_ab_ESC) & (viab_thresh001 == "viable"))
+
+subset(comb_data_norm, (viab_thresh001 == "not viable") & (mutant == "wt"))
+subset(comb_data_norm, (viab_thresh001 == "not viable") & (mutant == "mutant"))
+subset(comb_data_norm, (viab_thresh001 == "viable") & (mutant == "mutant"))
+subset(comb_data_norm, (viab_thresh1 == "not viable") & (mutant == "wt"))
+
+```
+
+##Remove WT
+```{r}
+comb_data_norm_no_wt = hiv_comb_data %>% subset(mutant == "mutant") %>%
+  mutate_at(my_measures, function(x) rank(x, na.last = "keep")) %>%
+  mutate_at(rev_rank_measures, ~max(rank(., na.last = "keep"), na.rm=T) + 1 - rank(.,na.last = "keep") ) %>%
+  mutate_at(my_measures, function(x) x/max(x, na.rm = TRUE))
+
+
+comb_data_long_no_wt = comb_data_norm %>% 
+  select(-wildtype, -mutation, -HXB2_site, -pref_scaled) %>%
+  pivot_longer(cols = my_measures ,
+               names_to = "Measure",
+               values_to = "rank") %>%
+  mutate(Measure = 
+           case_when(
+             Measure == "ddG_Stab_Ora" ~ "Stability Oracle",
+             Measure == "prob_MutCompX" ~ "MutComputeX",
+             Measure == "prob_MutRank" ~ "MutRank",
+             Measure == "prob_ESM2_masked" ~ "Grammaticality (ESM2, masked)",
+             Measure == "Semantic.change_Hie" ~ "Semantic change (Hie)",
+             Measure == "Grammaticality_Hie" ~ "Grammaticality (Hie)",
+             Measure == "Semantic.change_ESM2" ~ "Semantic change (ESM2)",
+             Measure == "Grammaticality_ESM2_log" ~ "Grammaticality (ESM2, unmasked)",
+             Measure == "evescape" ~ "EVEscape",
+             Measure == "eve" ~ "EVE"
+             )
+         )
+```
+
+# Boxplots viability
+
+Now I want to recreate the cov bar charts. The issue is choosing which measure of viability to use
+
+Let's start with the coloring the plot by viability
+
+prepare the data
+
+```{r}
+comb_data_norm
+comb_data_long
+
+comb_data_long_gramm = comb_data_long
+
+x_order = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVEscape",
+            "EVE",
+            "Semantic change (Hie)",
+            "Semantic change (ESM2)"
+         ))
+
+count_comb_hiv_esc_via_eff_tol = comb_data_long %>% 
+  mutate(tested_via = case_when(
+    (viab_thresh001 == "viable") ~ "viable",
+    (viab_thresh001 == "not viable") ~ "not viable",
+    TRUE ~ "not tested"
+  )) %>%
+  mutate(tested_esc = case_when(
+    (any_ab_ESC) ~ "escape",
+    (!any_ab_ESC) ~ "non-escape",
+    TRUE ~ "not tested"
+  ))
+nested_comb_data_long_esc_eff_tol = count_comb_hiv_esc_via_eff_tol %>% 
+  subset(tested_via != "not tested") %>% 
+  subset(Measure != "FoldX") %>% 
+  subset(Measure != "PyRosetta") |>
+  pivot_wider(names_from = "viab_thresh001", values_from = "rank") |>
+  select(-c(mutant))  %>% 
+  arrange(factor(Measure, levels = x_order))
+fname = paste0('hiv_boxplots_viability_tested_.001thresh_', Sys.Date(), '.png')
+
+nested_comb_data_long_esc_temp = nested_comb_data_long_esc_eff_tol %>% nest(data = -Measure)
+
+nested_comb_data_long_esc_eff_tol
+# count_comb_hiv_esc_via_eff_tol %>% subset(ESC_via_thresh001 == "non-escape, not viable")
+# count_comb_hiv_esc_via_eff_tol %>% subset(ESC_via_thresh001 == "escape, not viable")
+count_comb_hiv_esc_via_eff_tol %>% subset(tested_via == "not tested")
+count_comb_hiv_esc_via_eff_tol %>% subset(tested_esc == "not tested")
+count_comb_hiv_esc_via_eff_tol %>% subset((tested_esc == "not tested") & (tested_via == "not tested"))
+count_comb_hiv_esc_via_eff_tol %>% subset((tested_esc != "not tested") & (tested_via == "not tested"))
+count_comb_hiv_esc_via_eff_tol %>% subset((tested_esc == "not tested") & (tested_via != "not tested"))
+# count_comb_hiv_esc_via_eff_tol %>% subset(ESC_via_thresh001 == "escape")
+# count_comb_hiv_esc_via_eff_tol %>% subset(ESC_via_thresh001 == "non-escape")
+
+```
+
+
+```{r}
+data_stats_gramm <- nested_comb_data_long_esc_eff_tol |>
+  nest(data = -Measure) %>%
+  mutate(
+    via_non_via = map(data, ~broom::tidy(wilcox.test(.x$viable, .x$`not viable`)))
+    
+  ) |>
+  pivot_longer(
+    cols = c(via_non_via),
+    names_to = "test",
+    values_to = "stats"
+  ) |>
+  mutate(
+    column1 = case_when(
+      test == "via_non_via" ~ "viable"
+    ),
+    column2 = case_when(
+      test == "via_non_via" ~ "not viable"
+    )
+  ) |>
+  unnest_wider(stats) |>
+  select(Measure, column1, column2, p.value)
+
+y_delta = 0#.25 # distance between adjacent bloxplots (.8/number of boxplots)
+x_delta = 0#.185 # distance between line segments
+data_comparisons_gramm <- data_stats_gramm |>
+  mutate(
+    # apply overall false-discovery rate correction
+    p.value = p.adjust(p.value, method = "fdr"),
+    # set stars
+    label = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01 ~ "**",
+      p.value < 0.05 ~ "*",
+      TRUE ~ "NS"
+    ),
+    # offset to correct for stars not being vertically centered
+    label_off = case_when(
+      label == "NS" ~ 0,
+      TRUE ~ -.04,
+    ),
+    # calculate x and y offsets for line segments
+    yoff1 = case_when(
+      column1 == "viable" ~ y_delta,
+      column1 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    yoff2 = case_when(
+      column2 == "viable" ~ y_delta,
+      column2 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    xoff = case_when(
+      column1 == "viable" & column2 == "not viable" ~ 0,
+      column1 == "not viable" & column2 == "viable" ~ x_delta,
+      TRUE ~ 2 * x_delta
+    )
+  )
+
+data_comparisons_via_gramm = data_comparisons_gramm %>% 
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+data_comparisons_via_sem = data_comparisons_gramm %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+nested_comb_data_long_via_gramm = nested_comb_data_long_esc_temp %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+nested_comb_data_long_via_sem = nested_comb_data_long_esc_temp %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+custom_order_via = c("viable", "not viable")
+
+x_order_gramm = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVE"
+         ))
+
+nested_comb_data_long_esc_temp
+nested_comb_data_long_esc_eff_tol
+
+via_gramm_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, viable, `not viable`)) %>%#select(-c(ID_HXB2,ID, any_ab_ESC, res_seq_num, ESC_via_thresh0005)) %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% 
+  arrange(factor(Measure, levels = (x_order_gramm))) %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% 
+  drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_gramm), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("viable" = "#399c52",
+                                 "not viable" = '#AF596E' #"#cd6a83", 
+                                 ),
+                      breaks = custom_order_via,
+                      name = "env\nmutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_gramm)) + yoff2
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.02, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Grammaticality (ESM2, unmasked)" = "Grammaticality\n(ESM2, unmasked)",
+                              "Grammaticality (ESM2, masked)" = "Grammaticality\n(ESM2, masked)",
+                              "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  # scale_y_discrete(labels = c("Grammaticality (ESM2)" = "Grammaticality\n(ESM2, unmasked)",
+  #                             "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  theme_classic() + ylab("") + theme(legend.position = "top")
+via_gramm_plot
+data_stats_gramm
+data_comparisons_via_gramm
+layer_data(via_gramm_plot)
+```
+
+Semantic change subplot for viability
+
+```{r}
+x_order_sem = rev(c("Semantic change (Hie)", "Semantic change (ESM2)", "EVEscape"))
+
+via_sem_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, viable, `not viable`)) %>% 
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"
+                        )) %>% 
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |> 
+  arrange(factor(Measure, levels = (x_order_sem))) %>%
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_sem), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("viable" = "#399c52",
+                                 "not viable" = '#AF596E', #"#cd6a83", 
+                                 "not tested" = "#C5C5C5"),
+                      breaks = custom_order_via,
+                      name = "env mutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_sem)) + yoff2
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.04, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")
+                   ) +
+  theme_classic() + ylab("") + theme(legend.position = "none")
+via_sem_plot
+```
+```{r}
+via_sem_plot_new_labs = via_sem_plot + 
+  theme(legend.position="none")+ # plot.margin = margin(r = 0, l = 0, t= 0, b = 0.1, unit = "inches"))
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")) + 
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_sem_plot_new_labs
+
+via_gramm_plot_new = via_gramm_plot + 
+  theme(legend.position="none", plot.margin = margin(l = 0,t = 0.1, b = 0.1, r = 0.1, unit = "inches"))+#unit(c(0, 0, 0, 0), "inches"))  + 
+  #xlim(-.02,2.5) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_gramm_plot_new
+
+legend_b <- get_legend(
+  via_gramm_plot_new + theme(legend.position="right",
+                             legend.key.width = unit(.6, "in"),
+                             legend.key.height = unit(.1, "in")) +
+    guides(color = guide_legend(nrow = 3,
+                                title = "env\nmutation type"))
+)
+
+aligned <- align_plots(via_gramm_plot_new+ xlab("relative rank"), 
+                       via_sem_plot_new_labs+ xlab("relative rank"), 
+                       align = 'h', axis = 'l')
+
+sem_col <- plot_grid(
+  aligned[[2]],#via_sem_plot_new_labs+ xlab("relative rank"),
+  legend_b,
+  NULL,
+  labels = c("", "", ""),
+  nrow = 3,
+  rel_heights = c(1, .5, .35)
+)
+sem_col
+
+gram_col = plot_grid(
+  aligned[[1]] ,
+  NULL,
+  labels = c("", ""),
+  nrow = 2,
+  rel_heights = c(1, .05)
+)
+
+via_all_measures = plot_grid(
+  gram_col,#aligned[[1]], 
+  #NULL,
+  sem_col, 
+  ncol = 2,
+  align = 'h',
+  labels = c("A", "B"),
+  label_x = 0.05, label_y = 0.95,
+  hjust = -0.5, vjust = -0.5,
+  rel_widths = c(1, .75))
+
+via_all_measures
+
+#fname = paste0('hiv_boxplots_viability_.0008thresh_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = via_all_measures + theme(plot.background = element_rect(fill = "white", linetype = "blank"),
+                             panel.border = element_blank()),
+  width = 6.5, height = 5.3, units = "in"
+)
+```
+
+# Boxplots Escape
+
+```{r}
+nested_comb_data_long_esc_eff_tol = count_comb_hiv_esc_via_eff_tol %>% 
+  subset(tested_esc != "not tested") %>% 
+  subset(Measure != "FoldX") %>% 
+  subset(Measure != "PyRosetta") |>
+  #subset(mutant != "wt") %>% 
+  # mutate(any_ab_ESC = case_when(any_ab_ESC ~ "escape",
+  #                                     FALSE ~ "non-escape",
+  #                               TRUE ~ "not tested")
+  #        ) %>%
+  pivot_wider(names_from = "tested_esc", values_from = "rank") |>
+  select(-c(mutant))  %>% 
+  arrange(factor(Measure, levels = x_order))
+fname = paste0('hiv_boxplots_escape_tested_dms_tools_', Sys.Date(), '.png')
+
+
+
+nested_comb_data_long_esc_temp = nested_comb_data_long_esc_eff_tol %>% nest(data = -Measure)
+nested_comb_data_long_esc_eff_tol
+```
+
+
+```{r}
+# nested_comb_data_long_gramm = comb_data_long_gramm |>
+#   pivot_wider(names_from = "viability", values_from = "rank") |>
+#   select(-c(mutant, Starr_esc, Baum_esc)) %>%
+#   subset(!(Measure %in% c(
+#                           "PyRosetta",
+#                           "FoldX")))
+
+data_stats_gramm <- nested_comb_data_long_esc_eff_tol |>
+  nest(data = -Measure) %>%
+  mutate(
+    via_non_via = map(data, ~broom::tidy(wilcox.test(.x$escape, .x$`non-escape`)))
+    
+  ) |>
+  pivot_longer(
+    cols = c(via_non_via),
+    names_to = "test",
+    values_to = "stats"
+  ) |>
+  mutate(
+    column1 = case_when(
+      test == "via_non_via" ~ "escape"
+    ),
+    column2 = case_when(
+      test == "via_non_via" ~ "non-escape"
+    )
+  ) |>
+  unnest_wider(stats) |>
+  select(Measure, column1, column2, p.value)
+
+y_delta = 0#.25 # distance between adjacent bloxplots (.8/number of boxplots)
+x_delta = 0#.185 # distance between line segments
+data_comparisons_gramm <- data_stats_gramm |>
+  mutate(
+    # apply overall false-discovery rate correction
+    p.value = p.adjust(p.value, method = "fdr"),
+    # set stars
+    label = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01 ~ "**",
+      p.value < 0.05 ~ "*",
+      TRUE ~ "NS"
+    ),
+    # offset to correct for stars not being vertically centered
+    label_off = case_when(
+      label == "NS" ~ 0,
+      TRUE ~ -.04,
+    ),
+    # calculate x and y offsets for line segments
+    yoff1 = case_when(
+      column1 == "viable" ~ y_delta,
+      column1 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    yoff2 = case_when(
+      column2 == "viable" ~ y_delta,
+      column2 == "not viable" ~ -y_delta,
+      TRUE ~ 0
+    ),
+    xoff = case_when(
+      column1 == "escape" & column2 == "non-escape" ~ 0,
+      column1 == "non-escape" & column2 == "escape" ~ x_delta,
+      TRUE ~ 2 * x_delta
+    )
+  )
+
+data_comparisons_via_gramm = data_comparisons_gramm %>% 
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+data_comparisons_via_sem = data_comparisons_gramm %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+nested_comb_data_long_via_gramm = nested_comb_data_long_esc_temp %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% arrange(factor(Measure, levels = (x_order)))
+nested_comb_data_long_via_sem = nested_comb_data_long_esc_temp %>%
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"))
+
+custom_order_via = c("escape", "non-escape")
+
+x_order_gramm = rev(c("Grammaticality (Hie)",
+            "Grammaticality (ESM2, unmasked)",
+            "Grammaticality (ESM2, masked)", 
+            "MutComputeX",
+            "MutRank",
+            "Stability Oracle",
+            "EVE"
+         ))
+
+nested_comb_data_long_esc_temp
+nested_comb_data_long_esc_eff_tol
+
+via_gramm_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, escape, `non-escape`)) %>%#select(-c(ID_HXB2,ID, any_ab_ESC, res_seq_num, ESC_via_thresh0005)) %>%
+  subset(!(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                          "EVEscape",
+                          "PyRosetta",
+                          "FoldX"))) %>% 
+  arrange(factor(Measure, levels = (x_order_gramm))) %>%
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% 
+  drop_na(value) |>
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_gramm), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100" 
+                                 ),
+                      breaks = custom_order_via,
+                      name = "env\nmutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_gramm)) + yoff2
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_gramm,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_gramm)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.02, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Grammaticality (ESM2, unmasked)" = "Grammaticality\n(ESM2, unmasked)",
+                              "Grammaticality (ESM2, masked)" = "Grammaticality\n(ESM2, masked)",
+                              "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  # scale_y_discrete(labels = c("Grammaticality (ESM2)" = "Grammaticality\n(ESM2, unmasked)",
+  #                             "Grammaticality (Hie)" = "Grammaticality\n(Hie)")) +
+  theme_classic() + ylab("") + theme(legend.position = "top")
+via_gramm_plot
+data_stats_gramm
+data_comparisons_via_gramm
+layer_data(via_gramm_plot)
+```
+
+Semantic change subplot for escape
+
+```{r}
+x_order_sem = rev(c("Semantic change (Hie)", "Semantic change (ESM2)", "EVEscape"))
+
+via_sem_plot = nested_comb_data_long_esc_eff_tol %>% select(c(Measure, escape, `non-escape`)) %>% 
+  subset(Measure %in% c("Semantic change (Hie)", 
+                          "Semantic change (ESM2)",
+                        "EVEscape"
+                        )) %>% 
+  pivot_longer(-Measure, names_to = "type", values_to = "value") %>% drop_na(value) |> 
+  arrange(factor(Measure, levels = (x_order_sem))) %>%
+  ggplot(aes(x = value, y = factor(Measure, level = x_order_sem), fill = factor(type, rev(custom_order_via)))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100"),
+                      breaks = custom_order_via,
+                      name = "env mutation type"
+                    ) +
+  geom_segment( # line segments for significance
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1.0 + xoff + .03, 
+      xend = 1.0 + xoff + .03,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + yoff1, 
+      yend = as.numeric(factor(Measure, level = x_order_sem)) + yoff2
+    ),
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = data_comparisons_via_sem,
+    aes(
+      x = 1 + xoff +.04,
+      y = as.numeric(factor(Measure, level = x_order_sem)) + (yoff1 + yoff2) / 2 + label_off,
+      label = label,
+    ),
+    size = 10 / .pt, # 10 point font size
+    vjust = 0.5,
+    hjust = 0,
+    inherit.aes = FALSE
+  ) +
+  xlim(-.04, 1.55) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1)) +
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")
+                   ) +
+  theme_classic() + ylab("") + theme(legend.position = "none")
+via_sem_plot
+```
+
+```{r}
+via_sem_plot_new_labs = via_sem_plot + 
+  theme(legend.position="none")+ # plot.margin = margin(r = 0, l = 0, t= 0, b = 0.1, unit = "inches"))
+  scale_y_discrete(labels = c("Semantic change (ESM2)" = "Semantic\nchange\n(ESM2)",
+                              "Semantic change (Hie)" = "Semantic\nchange\n(Hie)")) + 
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_sem_plot_new_labs
+
+via_gramm_plot_new = via_gramm_plot + 
+  theme(legend.position="none", plot.margin = margin(l = 0,t = 0.1, b = 0.1, r = 0.1, unit = "inches"))+#unit(c(0, 0, 0, 0), "inches"))  + 
+  #xlim(-.02,2.5) +
+  scale_x_continuous(name = "relative rank", breaks =c(0,.5,1), limits = c(NA, 1.2))
+via_gramm_plot_new
+
+legend_b <- get_legend(
+  via_gramm_plot_new + theme(legend.position="right",
+                             legend.key.width = unit(.6, "in"),
+                             legend.key.height = unit(.1, "in")) +
+    guides(color = guide_legend(nrow = 3,
+                                title = "env\nmutation type"))
+)
+
+aligned <- align_plots(via_gramm_plot_new+ xlab("relative rank"), 
+                       via_sem_plot_new_labs+ xlab("relative rank"), 
+                       align = 'h', axis = 'l')
+
+sem_col <- plot_grid(
+  aligned[[2]],#via_sem_plot_new_labs+ xlab("relative rank"),
+  legend_b,
+  NULL,
+  labels = c("", "", ""),
+  nrow = 3,
+  rel_heights = c(1, .5, .35)
+)
+sem_col
+
+gram_col = plot_grid(
+  aligned[[1]] ,
+  NULL,
+  labels = c("", ""),
+  nrow = 2,
+  rel_heights = c(1, .05)
+)
+
+via_all_measures = plot_grid(
+  sem_col,#aligned[[1]], 
+  #NULL,
+  gram_col, 
+  ncol = 2,
+  align = 'h',
+  labels = c("A", "B"),
+  label_x = 0.05, label_y = 0.95,
+  hjust = -0.5, vjust = -0.5,
+  rel_widths = c(.75, 1))
+
+via_all_measures
+
+#fname = paste0('hiv_boxplots_viability_.0008thresh_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = via_all_measures + theme(plot.background = element_rect(fill = "white", linetype = "blank"),
+                             panel.border = element_blank()),
+  width = 6.5, height = 5.3, units = "in"
+)
+```
+#Pie Chart
+
+```{r}
+library(ggforce)
+
+count_comb_hiv = comb_data_norm %>% 
+  mutate(tested_via = case_when(
+    (viab_thresh001 == "viable") ~ "viable",
+    (viab_thresh001 == "not viable") ~ "not viable",
+    TRUE ~ "not tested"
+  )) %>%
+  mutate(tested_esc = case_when(
+    (any_ab_ESC) ~ "escape",
+    (!any_ab_ESC) ~ "non-escape",
+    TRUE ~ "not tested"
+  )) %>%
+  mutate(tested_esc_via = case_when(
+    (any_ab_ESC) & (tested_via == "viable") ~ "escape",
+    (!any_ab_ESC) & (tested_via == "viable") ~ "non-escape",
+    (any_ab_ESC) & (tested_via == "not viable") ~ "not viable",
+    (!any_ab_ESC) & (tested_via == "not viable") ~ "not viable",
+    TRUE ~ "not tested"
+  )) %>% 
+  group_by(tested_esc) %>%
+  summarize(
+    count = n()
+  )
+
+mut_order = c("escape", "non-escape", 
+              "not viable","not tested")
+
+pie_data_hiv <- count_comb_hiv %>%
+  arrange(match(tested_esc, mut_order)) %>% # sort so pie slices end up sorted
+  mutate(
+    end_angle = 2*pi*cumsum(count)/sum(count),   # ending angle for each pie slice
+    start_angle = lag(end_angle, default = 0),   # starting angle for each pie slice
+    mid_angle = 0.5*(start_angle + end_angle),   # middle of each pie slice, for text labels
+    # horizontal and vertical justifications for outer labels
+    hjust = ifelse(mid_angle > pi, 1, 0),
+    vjust = ifelse(mid_angle < pi/2 | mid_angle > 3*pi/2, 0, 1)
+  )
+pie_data_hiv
+pie_data_hiv$hjust[2] = 0 # to get the labels to not overlap since escape makes up such a small fraction of the circle
+# pie_data_hiv$vjust[4] = 1
+pie_data_hiv$mid_angle[2] = pie_data_hiv$end_angle[3] / 2.5
+pie_data_hiv$mid_angle[3] = pie_data_hiv$end_angle[3] / 1.05
+
+pie_data_hiv
+
+hiv_esc_pie = ggplot(pie_data_hiv) +
+    aes(
+      x0 = 0, y0 = 0,
+      r0 = 0.4, r = 1,
+      amount = count,
+      start = start_angle, end = end_angle,
+      fill = tested_esc
+    ) +
+  geom_arc_bar(alpha = 0.7) +
+  geom_text(
+    aes(x = 1.1 * sin(mid_angle), 
+        y = 1.1 * cos(mid_angle), 
+        label = count,
+        hjust = hjust,
+        vjust = vjust)#vjust)
+  ) +
+  scale_fill_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5"),
+                    name = "env\nmutation type",
+                    breaks = mut_order) +
+  coord_fixed() +
+  xlim(-1.0, 1.0) +
+  ylim(-1.1, 1.4) +
+  theme_void() +
+  theme(
+    strip.text = element_blank(),
+    strip.background = element_blank(),
+    legend.key=element_rect(color="white")
+  ) + 
+  geom_segment(aes(
+      x = 1 * sin(mid_angle), 
+      xend = 1.1 * sin(mid_angle),
+      y = 1 * cos(mid_angle), 
+      yend = 1.1 * cos(mid_angle)
+      #y = as.numeric(factor(Measure)) + y_delta, yend = as.numeric(factor(Measure)) - y_delta #midpoint +/- y_delta
+    ))
+hiv_esc_pie
+
+fname = paste0('hiv_DMS_esc_piechart_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = hiv_esc_pie,
+  width = 4, height = 3.5, units = "in"
+)
+
+mut_order = c("escape", "non-escape", 
+              "not viable","not tested")
+#layer_data(plot = cov_esc_pie)
+```
+
+#Scatter
+
+##Hie Gramm and SC
+```{r}
+custom_esc_order = (c("escape","non-escape", "not viable","not tested"))
+comb_data_scatter = hiv_comb_data %>% 
+  mutate(tested_via = case_when(
+    (viab_thresh001 == "viable") ~ "viable",
+    (viab_thresh001 == "not viable") ~ "not viable",
+    TRUE ~ "not tested"
+  )) %>%
+  mutate(tested_esc = case_when(
+    (any_ab_ESC) ~ "escape",
+    (!any_ab_ESC) ~ "non-escape",
+    TRUE ~ "not tested"
+  )) %>%
+  mutate(tested_esc_via = case_when(
+    (any_ab_ESC) & (tested_via == "viable") ~ "escape",
+    (!any_ab_ESC) & (tested_via == "viable") ~ "non-escape",
+    (any_ab_ESC) & (tested_via == "not viable") ~ "not viable",
+    (!any_ab_ESC) & (tested_via == "not viable") ~ "not viable",
+    TRUE ~ "not tested"
+  )) %>%
+  mutate(tested_esc_via = factor(tested_esc_via, rev(custom_esc_order))) %>%
+  arrange(tested_esc_via)
+  #group_by(Starr_esc) %>%
+  #arrange(match(Starr_esc, rev(custom_esc_order)))
+
+# p_hiv_scatter= ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+#   geom_point( data =comb_data_scatter %>% filter(tested_esc_via == "not tested"), 
+#               aes(x = Grammaticality_Hie, y = Semantic.change_Hie, 
+#                  color = tested_esc_via),
+#              alpha = 0.5, size = 1.5) +
+#   geom_point( data =comb_data_scatter %>% filter(tested_esc_via == "not viable"), 
+#               aes(x = Grammaticality_Hie, y = Semantic.change_Hie, 
+#                  color = tested_esc_via),
+#              alpha = 0.5, size = 1.5) +
+#   geom_point( data =comb_data_scatter %>% filter(tested_esc_via == "non-escape"), 
+#               aes(x = Grammaticality_Hie, y = Semantic.change_Hie, 
+#                  color = tested_esc_via),
+#              alpha = 0.5, size = 1.5) +
+#   geom_point( data =comb_data_scatter %>% filter(tested_esc_via == "escape"),
+#               aes(x = Grammaticality_Hie, y = Semantic.change_Hie,
+#                  color = tested_esc_via),
+#              alpha = 0.5, size = 1.5) +
+#   scale_color_manual(values = c("escape" = "#5D3A9B",
+#                                  "non-escape" = "#E66100", 
+#                                  "not viable" = "#AF596E",
+#                                  "not tested" = "#C5C5C5")) +
+#   # geom_point(data = subset(comb_data_scatter, tested_esc_via == "escape"), 
+#   #            aes(x = Grammaticality_Hie, y = Semantic.change_Hie),
+#   #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+#   theme_bw() + theme(legend.position = "none",#"top",
+#                      #aspect.ratio = 1,
+#                      legend.title = element_blank()
+#                      ) + 
+#   ylab("Semantic Change") +
+#   xlab("Grammaticality")
+
+p_hiv_scatter= ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_data_scatter, 
+              aes(x = Grammaticality_Hie, y = Semantic.change_Hie, 
+                 color = tested_esc_via),
+             alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  ylab("Semantic Change") +
+  xlab("Grammaticality") 
+p_hiv_scatter = p_hiv_scatter %>%
+  ggMarginal( 
+           groupColour = TRUE, groupFill = TRUE,
+           alpha = 0.0)
+fname = paste0('hiv_hie_sem_gramm_scatter_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = p_hiv_scatter,
+  width = 3.5, height = 3.5, units = "in",
+  dpi = 600
+)
+  
+```
+##Gramm and AA preferences
+```{r}
+p_hiv_scatter_pref= ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "non-escape"), 
+              aes(x = Grammaticality_Hie, y = log10(pref_scaled), 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "escape"),
+              aes(x = Grammaticality_Hie, y = log10(pref_scaled),
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  # geom_point(data = subset(comb_data_scatter, tested_esc_via == "escape"), 
+  #            aes(x = Grammaticality_Hie, y = Semantic.change_Hie),
+  #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  xlab("Grammaticality") +
+  ylab("Amino Acid Preference")
+p_hiv_scatter_pref
+fname = paste0('hiv_gramm_aapref_scatter_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = p_hiv_scatter_pref,
+  width = 3.5, height = 3.5, units = "in",
+  dpi = 600
+)
+
+```
+##ESM2 unmasked and SC
+```{r}
+p_hiv_scatter_ESM2= ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "not tested"), 
+              aes(x = Grammaticality_ESM2_log, y = Semantic.change_ESM2, 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "non-escape"), 
+              aes(x = Grammaticality_ESM2_log, y = Semantic.change_ESM2, 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "escape"),
+              aes(x = Grammaticality_ESM2_log, y = Semantic.change_ESM2,
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  # geom_point(data = subset(comb_data_scatter, tested_esc_via == "escape"), 
+  #            aes(x = Grammaticality_Hie, y = Semantic.change_Hie),
+  #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  xlab("Grammaticality (ESM2, unmasked)") +
+  ylab("Semantic Change")
+p_hiv_scatter_ESM2
+fname = paste0('hiv_gramm_ESM2unmasked_scatter_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = p_hiv_scatter_ESM2,
+  width = 3.5, height = 3.5, units = "in",
+  dpi = 600
+)
+
+```
+
+##ESM2 masked and SC
+```{r}
+p_hiv_scatter_ESM2masked=ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "not tested"), 
+              aes(x = log10(prob_ESM2_masked), y = Semantic.change_ESM2, 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "non-escape"), 
+              aes(x = log10(prob_ESM2_masked), y = Semantic.change_ESM2, 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "escape"),
+              aes(x = log10(prob_ESM2_masked), y = Semantic.change_ESM2,
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  # geom_point(data = subset(comb_data_scatter, tested_esc_via == "escape"), 
+  #            aes(x = Grammaticality_Hie, y = Semantic.change_Hie),
+  #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  xlab("Grammaticality (ESM2, masked)") +
+  ylab("Semantic Change")
+p_hiv_scatter_ESM2masked
+fname = paste0('hiv_gramm_ESM2masked_scatter_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = p_hiv_scatter_ESM2masked,
+  width = 3.5, height = 3.5, units = "in",
+  dpi = 600
+)
+
+```
+##ESM2 masked and AA preferences
+```{r}
+p_hiv_scatter_ESM2pref=ggplot() + #ggplot(subset(comb_data, Starr_esc != "not viable")) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "not tested"), 
+              aes(x = log10(prob_ESM2_masked), y = log10(pref_scaled), 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "non-escape"), 
+              aes(x = log10(prob_ESM2_masked), y = log10(pref_scaled), 
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  geom_point( data =comb_data_scatter %>% filter(tested_esc == "escape"),
+              aes(x = log10(prob_ESM2_masked), y = log10(pref_scaled),
+                 color = tested_esc),
+             alpha = 0.5, size = 1.5) +
+  scale_color_manual(values = c("escape" = "#5D3A9B",
+                                 "non-escape" = "#E66100", 
+                                 "not viable" = "#AF596E",
+                                 "not tested" = "#C5C5C5")) +
+  # geom_point(data = subset(comb_data_scatter, tested_esc_via == "escape"), 
+  #            aes(x = Grammaticality_Hie, y = Semantic.change_Hie),
+  #                shape = 4, color = "black", size = 1.5, stroke = .75, alpha = .7)  +
+  theme_bw() + theme(legend.position = "none",#"top",
+                     #aspect.ratio = 1,
+                     legend.title = element_blank()
+                     ) + 
+  xlab("Grammaticality (ESM2, masked)") +
+  ylab("Amino Acid Preference")
+p_hiv_scatter_ESM2pref
+fname = paste0('hiv_pref_ESM2masked_scatter_escape_', Sys.Date(), '.png')
+ggsave(
+  file = fname, 
+  plot = p_hiv_scatter_ESM2pref,
+  width = 3.5, height = 3.5, units = "in",
+  dpi = 600
+)
+
+```
+
+#Pie with Scatter
+```{r}
+library(cowplot)
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+#renv::init()
+```
+
+```{r}
+#mywd = "/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization"
+setwd("/Users/beallma/OneDrive - Emory University/Documents/PIPP/SARS_NLP/aggregate_data_vizualization")
+hiv_esc_pie
+p_hiv_scatter
+
+
+prow <- plot_grid(
+  p_hiv_scatter,
+  hiv_esc_pie + theme(legend.position="none"),
+  align = 'h',
+  labels = c("A", "B"),
+  hjust = -1,
+  nrow = 1,
+  rel_widths = c(1, 1)
+)
+prow
+
+legend_b <- get_legend(
+  hiv_esc_pie + 
+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom")
+)
+scatter_pie = plot_grid(prow, legend_b, 
+          ncol = 1,
+          rel_heights = c(1, .15))
+scatter_pie
+fname = paste0('hiv_scatter_escape_piechart_', Sys.Date(), '.png')
+ggsave(
+  file = fname,
+  plot = scatter_pie + theme(plot.background = element_rect(fill = "white", linetype = "blank"),
+                             panel.border = element_blank()),
+  width = 5.3, height = 3.8, units = "in"
+)
+```

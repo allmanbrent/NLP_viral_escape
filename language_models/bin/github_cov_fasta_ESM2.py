@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
     model = get_model(args, 1584, vocab_size,
                       inference_batch_size=args.batch_size)
-    #model.model_.load_weights(args.checkpoint)
+    model.model_.load_weights(args.checkpoint)
     tprint('Model summary:')
     #tprint(model.model_.summary())
 
